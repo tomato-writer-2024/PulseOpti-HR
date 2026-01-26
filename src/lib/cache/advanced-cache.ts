@@ -82,7 +82,7 @@ export function clearAllCache(): void {
  * 获取缓存统计
  */
 export function getCacheStats(): {
-  byType: Record<string, import('./memory-cache').CacheMetric>;
+  byType: Record<string, any>;
   summary: {
     totalCacheKeys: number;
     avgHitRate: number;
@@ -150,7 +150,8 @@ export async function refreshCacheInBackground<T>(
   return fetchWithConfig(dataType, params, fetcher);
 }
 
-export { fetchWithCache, clearCache as baseClearCache };
+export { fetchWithCache, clearCache as baseClearCache } from './memory-cache';
+export { getCacheConfig, buildCacheKey, getCacheTTL };
 export default {
   fetchWithConfig,
   clearCacheByType,

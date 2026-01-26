@@ -140,7 +140,7 @@ export default function SalaryAdjustmentContent() {
 
   const filteredAdjustments = selectedStatus === 'all'
     ? salaryAdjustments
-    : salaryAdjustments.filter((item: any) => a => a.status === selectedStatus);
+    : salaryAdjustments.filter((a: any) => a.status === selectedStatus);
 
   return (
     <div className="space-y-6">

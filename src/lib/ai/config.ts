@@ -3,7 +3,7 @@
  * 统一管理所有 AI 服务的配置
  */
 
-import { Config, ImageGenerationConfig, VoiceConfig } from 'coze-coding-dev-sdk';
+import { Config } from 'coze-coding-dev-sdk';
 
 /**
  * LLM 客户端配置
@@ -15,13 +15,13 @@ export const llmConfig = new Config({
 /**
  * 图片生成客户端配置
  */
-export const imageGenConfig = new ImageGenerationConfig({
+export const imageGenConfig = new Config({
   apiKey: process.env.COZE_WORKLOAD_IDENTITY_API_KEY,
 });
 
 /**
  * 语音客户端配置
  */
-export const voiceConfig = new VoiceConfig({
+export const voiceConfig = new Config({
   apiKey: process.env.COZE_WORKLOAD_IDENTITY_API_KEY,
 });

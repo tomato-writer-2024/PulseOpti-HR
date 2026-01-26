@@ -149,7 +149,7 @@ export default function SocialInsuranceContent() {
   }, [selectedMonth, fetchInsuranceTypes, fetchInsuranceRecords, loadInsuranceTypes, loadInsuranceRecords, loadStats]);
 
   const filteredRecords = useMemo(() => {
-    return insuranceRecords.filter((item: any) => record => {
+    return (insuranceRecords || []).filter((record: any) => {
       const matchesSearch = !debouncedQuery ||
         record.employeeName.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         record.employeeId.toLowerCase().includes(debouncedQuery.toLowerCase());
@@ -290,7 +290,7 @@ export default function SocialInsuranceContent() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {insuranceTypes.map((type) => (
+                  {(insuranceTypes || []).map((type) => (
                     <Card key={type.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">

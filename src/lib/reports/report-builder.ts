@@ -34,7 +34,7 @@ export interface ReportFilter {
 }
 
 export interface ReportChart {
-  type: 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'table';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'table' | 'funnel';
   title: string;
   xAxis?: string;
   yAxis?: string[];
@@ -114,13 +114,13 @@ export class ReportBuilder {
         table = employees;
         break;
       case 'attendance':
-        table = attendance;
+        table = attendanceRecords;
         break;
       case 'performance':
-        table = performance;
+        table = performanceRecords;
         break;
       case 'recruitment':
-        table = recruitment;
+        table = candidates;
         break;
       case 'interviews':
         table = interviews;
@@ -134,12 +134,24 @@ export class ReportBuilder {
       .filter(f => f.visible !== false)
       .map(f => {
         if (f.aggregate && f.aggregate !== 'none') {
-          return sql`${sql.raw(f.aggregate)}(${sql.identifier(f.name)}) as ${sql.identifier(f.name)}`;
+          return {
+            name: f.name,
+            expr: sql`${sql.raw(f.aggregate)}(${sql.identifier(f.name)}) as ${sql.identifier(f.name)}`,
+          };
         }
-        return sql.identifier(f.name);
+        return {
+          name: f.name,
+          expr: sql.identifier(f.name),
+        };
       });
 
-    query = db.select({ fields: fields }).from(table);
+    // 构建选择对象
+    const selectObj: Record<string, any> = {};
+    fields.forEach(f => {
+      selectObj[f.name] = f.expr;
+    });
+
+    query = db.select(selectObj).from(table);
 
     // 应用过滤器
     if (dataSource.filters && dataSource.filters.length > 0) {
@@ -401,7 +413,7 @@ export class ReportBuilder {
 
     switch (filter.operator) {
       case 'eq':
-        return eq(column, filter.value);
+        return sql`${column} = ${filter.value}`;
       case 'neq':
         return sql`${column} != ${filter.value}`;
       case 'gt':
@@ -413,14 +425,11 @@ export class ReportBuilder {
       case 'lte':
         return sql`${column} <= ${filter.value}`;
       case 'like':
-        return like(column, filter.value);
+        return sql`${column} LIKE ${filter.value}`;
       case 'in':
         return sql`${column} = ANY(${filter.value})`;
       case 'between':
-        return and(
-          gte(column, filter.value[0]),
-          lte(column, filter.value[1])
-        );
+        return sql`${column} BETWEEN ${filter.value[0]} AND ${filter.value[1]}`;
       default:
         throw new Error(`不支持的操作符: ${filter.operator}`);
     }
@@ -486,8 +495,10 @@ export class ReportBuilder {
     const { summary, metadata } = data;
 
     let text = `报表生成时间：${new Date().toLocaleString('zh-CN')}\n`;
-    text += `数据总行数：${metadata.totalRows}\n`;
-    text += `查询耗时：${metadata.executionTime}ms\n\n`;
+    if (metadata) {
+      text += `数据总行数：${metadata.totalRows}\n`;
+      text += `查询耗时：${metadata.executionTime}ms\n\n`;
+    }
 
     if (summary && Object.keys(summary).length > 0) {
       text += '数据汇总：\n';

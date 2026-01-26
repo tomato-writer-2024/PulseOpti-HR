@@ -119,8 +119,8 @@ export class AuditLogManager {
 
   async deleteLog(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(auditLogs).where(eq(auditLogs.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(auditLogs).where(eq(auditLogs.id, id)).returning();
+    return !!deleted;
   }
 
   // 清理过期日志（保留最近N天）
@@ -129,11 +129,12 @@ export class AuditLogManager {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-    const result = await db
+    const deleted = await db
       .delete(auditLogs)
-      .where(lte(auditLogs.createdAt, cutoffDate));
+      .where(lte(auditLogs.createdAt, cutoffDate))
+      .returning();
 
-    return result.rowCount ?? 0;
+    return deleted.length;
   }
 }
 

@@ -128,8 +128,8 @@ export default function SalaryCalculationContent() {
   // 统计数据
   const stats = useMemo(() => {
     const safeData = salaryData || [];
-    const calculatedCount = safeData.filter((item: any) => item => item.status === '已核算').length;
-    const pendingCount = safeData.filter((item: any) => item => item.status === '待核算').length;
+    const calculatedCount = safeData.filter((item: any) => item.status === '已核算').length;
+    const pendingCount = safeData.filter((item: any) => item.status === '待核算').length;
     const totalGross = safeData.reduce((sum, item) => sum + item.totalGross, 0);
     const totalNet = safeData.reduce((sum, item) => sum + item.netSalary, 0);
 
@@ -424,7 +424,7 @@ export default function SalaryCalculationContent() {
                                 if (checked) {
                                   setSelectedEmployees([...selectedEmployees, item.id]);
                                 } else {
-                                  setSelectedEmployees(selectedEmployees.filter((item: any) => id => id !== item.id));
+                                  setSelectedEmployees(selectedEmployees.filter((id: any) => id !== item.id));
                                 }
                               }}
                             />
@@ -489,8 +489,8 @@ export default function SalaryCalculationContent() {
                         <Skeleton className="h-40" />
                       ) : (
                         <div className="space-y-2">
-                          {departments.filter((item: any) => d => d.id !== 'all').map(dept => {
-                            const deptData = salaryData.filter((item: any) => item => item.department === dept.name);
+                          {departments.filter((d: any) => d.id !== 'all').map(dept => {
+                            const deptData = (salaryData || []).filter((item: any) => item.department === dept.name);
                             return (
                               <div key={dept.id} className="flex justify-between items-center py-2 border-b">
                                 <span className="text-sm">{dept.name}</span>
@@ -513,19 +513,19 @@ export default function SalaryCalculationContent() {
                         <div className="space-y-2">
                           <div className="text-sm">
                             <span className="text-gray-600">10K以下:</span>
-                            <span className="ml-2 font-medium">{salaryData.filter((item: any) => s => s.netSalary < 10000).length}人</span>
+                            <span className="ml-2 font-medium">{(salaryData || []).filter((s: any) => s.netSalary < 10000).length}人</span>
                           </div>
                           <div className="text-sm">
                             <span className="text-gray-600">10K-20K:</span>
-                            <span className="ml-2 font-medium">{salaryData.filter((item: any) => s => s.netSalary >= 10000 && s.netSalary < 20000).length}人</span>
+                            <span className="ml-2 font-medium">{(salaryData || []).filter((s: any) => s.netSalary >= 10000 && s.netSalary < 20000).length}人</span>
                           </div>
                           <div className="text-sm">
                             <span className="text-gray-600">20K-30K:</span>
-                            <span className="ml-2 font-medium">{salaryData.filter((item: any) => s => s.netSalary >= 20000 && s.netSalary < 30000).length}人</span>
+                            <span className="ml-2 font-medium">{(salaryData || []).filter((s: any) => s.netSalary >= 20000 && s.netSalary < 30000).length}人</span>
                           </div>
                           <div className="text-sm">
                             <span className="text-gray-600">30K以上:</span>
-                            <span className="ml-2 font-medium">{salaryData.filter((item: any) => s => s.netSalary >= 30000).length}人</span>
+                            <span className="ml-2 font-medium">{(salaryData || []).filter((s: any) => s.netSalary >= 30000).length}人</span>
                           </div>
                         </div>
                       )}

@@ -114,7 +114,7 @@ export function DataList<T = any>({
   // 处理搜索
   useEffect(() => {
     if (debouncedQuery !== searchQuery) {
-      updateOptions({ pagination: { ...currentOptions.pagination, page: 1 } });
+      updateOptions({ pagination: { page: 1, limit: currentOptions.pagination?.limit || 10, total: currentOptions.pagination?.total || 0 } });
     }
   }, [debouncedQuery, updateOptions]);
 
@@ -127,7 +127,7 @@ export function DataList<T = any>({
 
     const query = debouncedQuery.toLowerCase();
     return data.filter((item) =>
-      Object.values(item).some(
+      Object.values(item as any).some(
         (value) =>
           value !== null &&
           value !== undefined &&

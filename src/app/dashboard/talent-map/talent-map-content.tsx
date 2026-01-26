@@ -180,7 +180,7 @@ export default function TalentMapContent() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
-              {talentGrid.map((quadrant) => (
+              {(talentGrid || []).map((quadrant) => (
                 <Card key={quadrant.quadrant} className={`border-2 ${getQuadrantColor(quadrant.quadrant)}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -288,9 +288,9 @@ export default function TalentMapContent() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {talentGrid
+                  {(talentGrid || [])
                     .flatMap(q => q.employees)
-                    .filter((item: any) => e => e.potential >= 8)
+                    .filter((e: any) => e.potential >= 8)
                     .map((employee) => (
                       <Card key={employee.id}>
                         <CardContent className="pt-6">

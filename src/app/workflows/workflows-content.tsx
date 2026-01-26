@@ -21,8 +21,11 @@ import {
   Eye,
   RefreshCw,
   UserPlus,
+  UserMinus,
   TrendingUp,
+  ArrowRight,
   DollarSign,
+  Search,
 } from 'lucide-react';
 
 // 性能优化工具
@@ -94,9 +97,9 @@ export default function WorkflowsContent() {
   const loadStats = useCallback((workflowsList: Workflow[]) => {
     setStats({
       total: workflowsList.length,
-      running: workflowsList.filter((item: any) => w => w.status === 'running').length,
-      completed: workflowsList.filter((item: any) => w => w.status === 'completed').length,
-      paused: workflowsList.filter((item: any) => w => w.status === 'paused').length,
+      running: workflowsList.filter((w: any) => w.status === 'running').length,
+      completed: workflowsList.filter((w: any) => w.status === 'completed').length,
+      paused: workflowsList.filter((w: any) => w.status === 'paused').length,
     });
   }, []);
 
@@ -108,7 +111,8 @@ export default function WorkflowsContent() {
   }, [typeFilter, fetchWorkflows, loadWorkflows, loadStats]);
 
   const filteredWorkflows = useMemo(() => {
-    return workflows.filter((item: any) => workflow => {
+    if (!workflows) return [];
+    return workflows.filter((workflow: any) => {
       const matchesTab = activeTab === 'all' || workflow.status === activeTab;
       const matchesSearch = !debouncedQuery ||
         workflow.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||

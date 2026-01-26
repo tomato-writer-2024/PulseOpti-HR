@@ -119,8 +119,8 @@ export async function updateResignation(
 
 export async function deleteResignation(id: string) {
   const db = await getDb();
-  const result = await db.delete(resignations).where(eq(resignations.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(resignations).where(eq(resignations.id, id)).returning();
+  return !!deleted;
 }
 
 export async function approveResignation(
@@ -226,8 +226,8 @@ export async function updateHandoverChecklist(
 
 export async function deleteHandoverChecklist(id: string) {
   const db = await getDb();
-  const result = await db.delete(handoverChecklists).where(eq(handoverChecklists.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(handoverChecklists).where(eq(handoverChecklists.id, id)).returning();
+  return !!deleted;
 }
 
 export async function completeHandoverChecklist(
@@ -328,8 +328,8 @@ export async function updateExitInterview(
 
 export async function deleteExitInterview(id: string) {
   const db = await getDb();
-  const result = await db.delete(exitInterviews).where(eq(exitInterviews.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(exitInterviews).where(eq(exitInterviews.id, id)).returning();
+  return !!deleted;
 }
 
 // ========== 离职统计 ==========

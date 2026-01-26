@@ -124,11 +124,11 @@ export default function OfferManagementContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: offers.length,
-    pending: offers.filter((item: any) => o => o.status === 'pending').length,
-    sent: offers.filter((item: any) => o => o.status === 'sent').length,
-    accepted: offers.filter((item: any) => o => o.status === 'accepted').length,
-    rejected: offers.filter((item: any) => o => o.status === 'rejected').length,
+    total: (offers || []).length,
+    pending: (offers || []).filter((o: any) => o.status === 'pending').length,
+    sent: (offers || []).filter((o: any) => o.status === 'sent').length,
+    accepted: (offers || []).filter((o: any) => o.status === 'accepted').length,
+    rejected: (offers || []).filter((o: any) => o.status === 'rejected').length,
   }), [offers]);
 
   const getStatusColor = useCallback((status: string) => {
@@ -313,7 +313,7 @@ export default function OfferManagementContent() {
         <CardHeader>
           <CardTitle>Offer列表</CardTitle>
           <CardDescription>
-            共 {offers.length} 条记录
+            共 {(offers || []).length} 条记录
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -323,14 +323,14 @@ export default function OfferManagementContent() {
                 <Skeleton key={i} className="h-40 w-full" />
               ))}
             </div>
-          ) : offers.length === 0 ? (
+          ) : (offers || []).length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>暂无Offer记录</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {offers.map((offer) => (
+              {(offers || []).map((offer) => (
                 <Card key={offer.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">

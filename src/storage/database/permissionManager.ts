@@ -78,8 +78,8 @@ export class PermissionManager {
 
   async deletePermission(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(permissions).where(eq(permissions.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(permissions).where(eq(permissions.id, id)).returning();
+    return !!deleted;
   }
 
   // ========== 角色权限管理 ==========
@@ -92,10 +92,10 @@ export class PermissionManager {
 
   async removePermissionFromRole(role: string, permissionId: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db
-      .delete(rolePermissions)
+    const [deleted] = await db
+      .delete(rolePermissions).returning()
       .where(and(eq(rolePermissions.roleId, role), eq(rolePermissions.permissionId, permissionId)));
-    return (result.rowCount ?? 0) > 0;
+    return !!deleted;
   }
 
   async getRolePermissions(role: string): Promise<Permission[]> {
@@ -136,8 +136,8 @@ export class PermissionManager {
 
   async batchRemovePermissionsFromRole(role: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(rolePermissions).where(eq(rolePermissions.roleId, role));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(rolePermissions).where(eq(rolePermissions.roleId, role)).returning();
+    return !!deleted;
   }
 }
 

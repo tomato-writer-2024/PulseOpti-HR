@@ -64,7 +64,7 @@ export default function ResultAnalysisContent() {
     setOverviewLoading(true);
     try {
       const cacheKey = `overview-${selectedCycle}-${selectedDepartment}`;
-      const data = await fetchWithCache<PerformanceOverview>(cacheKey, async () => {
+      const result = await fetchWithCache<any>(cacheKey, async () => {
         const params = new URLSearchParams({
           cycle: selectedCycle,
           ...(selectedDepartment !== 'all' && { department: selectedDepartment }),
@@ -73,17 +73,16 @@ export default function ResultAnalysisContent() {
         const response = await get<{ success: boolean; data?: PerformanceOverview }>(
           `/api/performance/analysis/overview?${params.toString()}`
         );
-
-        return response.data || {
-          totalEmployees: 0,
-          avgScore: 0,
-          passRate: 0,
-          excellentRate: 0,
-          cycle: selectedCycle,
-        };
+        return response;
       }, 5 * 60 * 1000);
 
-      setOverview(data);
+      setOverview(result?.data || {
+        totalEmployees: 0,
+        avgScore: 0,
+        passRate: 0,
+        excellentRate: 0,
+        cycle: selectedCycle,
+      });
     } catch (err) {
       console.error('加载概览数据失败:', err);
       monitor.trackError('loadOverview', err as Error);
@@ -125,15 +124,14 @@ export default function ResultAnalysisContent() {
     setDistLoading(true);
     try {
       const cacheKey = `score-dist-${selectedCycle}`;
-      const data = await fetchWithCache<ChartData>(cacheKey, async () => {
+      const result = await fetchWithCache<any>(cacheKey, async () => {
         const response = await get<{ success: boolean; data?: ChartData }>(
           `/api/performance/analysis/distribution?cycle=${selectedCycle}`
         );
-
-        return response.data || { labels: [], data: [] };
+        return response;
       }, 5 * 60 * 1000);
 
-      setScoreDistribution(data);
+      setScoreDistribution(result?.data || { labels: [], data: [] });
     } catch (err) {
       console.error('加载分数分布失败:', err);
       monitor.trackError('loadScoreDistribution', err as Error);

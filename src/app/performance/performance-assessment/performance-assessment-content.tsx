@@ -107,10 +107,10 @@ export default function PerformanceAssessmentContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: assessments.length,
-    pending: assessments.filter((item: any) => a => a.status === 'pending').length,
-    inProgress: assessments.filter((item: any) => a => a.status === 'in_progress').length,
-    completed: assessments.filter((item: any) => a => a.status === 'completed').length,
+    total: (assessments || []).length,
+    pending: (assessments || []).filter((a: any) => a.status === 'pending').length,
+    inProgress: (assessments || []).filter((a: any) => a.status === 'in_progress').length,
+    completed: (assessments || []).filter((a: any) => a.status === 'completed').length,
   }), [assessments]);
 
   const getStatusColor = useCallback((status: string) => {
@@ -272,14 +272,14 @@ export default function PerformanceAssessmentContent() {
                 <Skeleton key={i} className="h-36 w-full" />
               ))}
             </div>
-          ) : assessments.length === 0 ? (
+          ) : (assessments || []).length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>暂无考核记录</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {assessments.map((assessment) => (
+              {(assessments || []).map((assessment) => (
                 <Card key={assessment.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">

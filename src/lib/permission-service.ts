@@ -300,7 +300,7 @@ export class PermissionService {
       if (!fieldPerm || fieldPerm.level !== 'hidden') {
         result[key] = value;
       }
-      if (fieldPerm.level === 'read-only') {
+      if (fieldPerm?.level === 'read-only') {
         result[key] = value;
       }
     }

@@ -291,15 +291,15 @@ export default function TalentReviewContent() {
   // 九宫格数据分组
   const nineGridData = {
     highPotential: [
-      { quadrant: 'star', label: '明星员工', talents: talents.filter((item: any) => t => t.quadrant === 'star') },
-      { quadrant: 'high-potential', label: '高潜人才', talents: talents.filter((item: any) => t => t.quadrant === 'high-potential') },
-      { quadrant: 'solid', label: '中坚力量', talents: talents.filter((item: any) => t => t.quadrant === 'solid') },
+      { quadrant: 'star', label: '明星员工', talents: talents.filter((t: any) => t.quadrant === 'star') },
+      { quadrant: 'high-potential', label: '高潜人才', talents: talents.filter((t: any) => t.quadrant === 'high-potential') },
+      { quadrant: 'solid', label: '中坚力量', talents: talents.filter((t: any) => t.quadrant === 'solid') },
     ],
     mediumPotential: [
-      { quadrant: 'improve', label: '待提升', talents: talents.filter((item: any) => t => t.quadrant === 'improve') },
+      { quadrant: 'improve', label: '待提升', talents: talents.filter((t: any) => t.quadrant === 'improve') },
     ],
     lowPotential: [
-      { quadrant: 'question-mark', label: '观察期', talents: talents.filter((item: any) => t => t.quadrant === 'question-mark') },
+      { quadrant: 'question-mark', label: '观察期', talents: talents.filter((t: any) => t.quadrant === 'question-mark') },
     ],
   };
 
@@ -358,10 +358,10 @@ export default function TalentReviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {talents.filter((item: any) => t => t.quadrant === 'star').length}
+              {talents.filter((t: any) => t.quadrant === 'star').length}
             </div>
             <p className="text-xs text-gray-500">
-              占比 {((talents.filter((item: any) => t => t.quadrant === 'star').length / talents.length) * 100).toFixed(0)}%
+              占比 {((talents.filter((t: any) => t.quadrant === 'star').length / talents.length) * 100).toFixed(0)}%
             </p>
           </CardContent>
         </Card>
@@ -373,10 +373,10 @@ export default function TalentReviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {talents.filter((item: any) => t => t.quadrant === 'high-potential').length}
+              {talents.filter((t: any) => t.quadrant === 'high-potential').length}
             </div>
             <p className="text-xs text-gray-500">
-              占比 {((talents.filter((item: any) => t => t.quadrant === 'high-potential').length / talents.length) * 100).toFixed(0)}%
+              占比 {((talents.filter((t: any) => t.quadrant === 'high-potential').length / talents.length) * 100).toFixed(0)}%
             </p>
           </CardContent>
         </Card>
@@ -388,7 +388,7 @@ export default function TalentReviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {talents.filter((item: any) => t => t.successionReady).length}
+              {talents.filter((t: any) => t.successionReady).length}
             </div>
             <p className="text-xs text-gray-500">可立即继任关键岗位</p>
           </CardContent>
@@ -435,7 +435,7 @@ export default function TalentReviewContent() {
                   <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-4 border-2 border-purple-200 dark:border-purple-800">
                     <div className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">高潜力/高绩效</div>
                     <div className="text-xs text-purple-700 dark:text-purple-300 mb-3">明星员工</div>
-                    {talents.filter((item: any) => t => t.quadrant === 'star').map(talent => (
+                    {talents.filter((t: any) => t.quadrant === 'star').map(talent => (
                       <div
                         key={talent.id}
                         className="bg-white dark:bg-gray-800 rounded p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -457,7 +457,7 @@ export default function TalentReviewContent() {
                   <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-800">
                     <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">高潜力/中绩效</div>
                     <div className="text-xs text-blue-700 dark:text-blue-300 mb-3">高潜人才</div>
-                    {talents.filter((item: any) => t => t.quadrant === 'high-potential').map(talent => (
+                    {talents.filter((t: any) => t.quadrant === 'high-potential').map(talent => (
                       <div
                         key={talent.id}
                         className="bg-white dark:bg-gray-800 rounded p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -479,7 +479,7 @@ export default function TalentReviewContent() {
                   <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border-2 border-green-200 dark:border-green-800">
                     <div className="text-sm font-medium text-green-900 dark:text-green-100 mb-2">中潜力/高绩效</div>
                     <div className="text-xs text-green-700 dark:text-green-300 mb-3">中坚力量</div>
-                    {talents.filter((item: any) => t => t.quadrant === 'solid').map(talent => (
+                    {talents.filter((t: any) => t.quadrant === 'solid').map(talent => (
                       <div
                         key={talent.id}
                         className="bg-white dark:bg-gray-800 rounded p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -502,7 +502,7 @@ export default function TalentReviewContent() {
                   <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-4 border-2 border-orange-200 dark:border-orange-800">
                     <div className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-2">中潜力/中绩效</div>
                     <div className="text-xs text-orange-700 dark:text-orange-300 mb-3">待提升</div>
-                    {talents.filter((item: any) => t => t.quadrant === 'improve').map(talent => (
+                    {talents.filter((t: any) => t.quadrant === 'improve').map(talent => (
                       <div
                         key={talent.id}
                         className="bg-white dark:bg-gray-800 rounded p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -525,10 +525,10 @@ export default function TalentReviewContent() {
                   <div className="col-span-2 bg-gray-50 dark:bg-gray-950/20 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-800">
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">低潜力</div>
                     <div className="text-xs text-gray-700 dark:text-gray-300 mb-3">观察期</div>
-                    {talents.filter((item: any) => t => t.quadrant === 'question-mark').length === 0 ? (
+                    {talents.filter((t: any) => t.quadrant === 'question-mark').length === 0 ? (
                       <div className="text-center py-8 text-gray-400">暂无人员</div>
                     ) : (
-                      talents.filter((item: any) => t => t.quadrant === 'question-mark').map(talent => (
+                      talents.filter((t: any) => t.quadrant === 'question-mark').map(talent => (
                         <div
                           key={talent.id}
                           className="bg-white dark:bg-gray-800 rounded p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -605,7 +605,7 @@ export default function TalentReviewContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {talents.filter((item: any) => t => t.quadrant === 'high-potential' || t.quadrant === 'star').map(talent => (
+                {talents.filter((t: any) => t.quadrant === 'high-potential' || t.quadrant === 'star').map(talent => (
                   <div
                     key={talent.id}
                     className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -900,9 +900,9 @@ export default function TalentReviewContent() {
                 <h3 className="text-lg font-semibold mb-3">按部门分布</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {['技术部', '产品部', '销售部', '人力资源'].map(dept => {
-                    const deptTalents = talents.filter((item: any) => t => t.department === dept);
-                    const starCount = deptTalents.filter((item: any) => t => t.quadrant === 'star').length;
-                    const highPotentialCount = deptTalents.filter((item: any) => t => t.quadrant === 'high-potential').length;
+                    const deptTalents = talents.filter((t: any) => t.department === dept);
+                    const starCount = deptTalents.filter((t: any) => t.quadrant === 'star').length;
+                    const highPotentialCount = deptTalents.filter((t: any) => t.quadrant === 'high-potential').length;
 
                     return (
                       <div key={dept} className="border rounded-lg p-4">
@@ -932,7 +932,7 @@ export default function TalentReviewContent() {
                 <h3 className="text-lg font-semibold mb-3">按层级分布</h3>
                 <div className="space-y-3">
                   {['P4-P5 (初级)', 'P6-P7 (中级)', 'P8-P9 (高级)', 'P10+ (专家/管理)'].map(level => {
-                    const levelTalents = talents.filter((item: any) => t => {
+                    const levelTalents = talents.filter((t: any) => {
                       if (level.includes('P4-P5')) return ['P4', 'P5'].includes(t.level);
                       if (level.includes('P6-P7')) return ['P6', 'P7'].includes(t.level);
                       if (level.includes('P8-P9')) return ['P8', 'P9'].includes(t.level);
@@ -953,13 +953,13 @@ export default function TalentReviewContent() {
                           <div className="text-sm">
                             <span className="text-gray-500">明星:</span>{' '}
                             <Badge variant="default" className="ml-1">
-                              {levelTalents.filter((item: any) => t => t.quadrant === 'star').length}
+                              {levelTalents.filter((t: any) => t.quadrant === 'star').length}
                             </Badge>
                           </div>
                           <div className="text-sm">
                             <span className="text-gray-500">高潜:</span>{' '}
                             <Badge variant="secondary" className="ml-1">
-                              {levelTalents.filter((item: any) => t => t.quadrant === 'high-potential').length}
+                              {levelTalents.filter((t: any) => t.quadrant === 'high-potential').length}
                             </Badge>
                           </div>
                         </div>

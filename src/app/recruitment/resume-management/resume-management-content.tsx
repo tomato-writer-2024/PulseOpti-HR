@@ -115,10 +115,10 @@ export default function ResumeManagementContent() {
           { enableMetrics: true }
         );
 
-        return response;
-      }).then(result => {
+        return response as any;
+      }).then((result: any) => {
         if (result.success && result.data) {
-          setCandidates(result.data);
+          setCandidates(result.data as unknown as Candidate[]);
           setTotalCount(result.total || result.data.length);
         }
       });
@@ -142,10 +142,10 @@ export default function ResumeManagementContent() {
           { enableMetrics: true }
         );
 
-        return response;
-      }).then(result => {
+        return response as any;
+      }).then((result: any) => {
         if (result.success && result.data) {
-          setJobs(result.data);
+          setJobs(result.data as unknown as Job[]);
         }
       });
     } catch (error) {
@@ -227,7 +227,7 @@ export default function ResumeManagementContent() {
 
   // 过滤候选人
   const filteredCandidates = useMemo(() => {
-    return candidates.filter((item: any) => candidate => {
+    return candidates.filter((candidate: any) => {
       const matchesSearch =
         candidate.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         candidate.email?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -316,7 +316,7 @@ export default function ResumeManagementContent() {
                 {loading ? (
                   <Skeleton className="h-8 w-12" />
                 ) : (
-                  (status.key === 'all' ? totalCount : candidates.filter((item: any) => c => c.status === status.key).length)
+                  (status.key === 'all' ? totalCount : candidates.filter((c: any) => c.status === status.key).length)
                 )}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">

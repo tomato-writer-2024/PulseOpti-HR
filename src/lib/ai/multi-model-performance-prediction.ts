@@ -5,7 +5,7 @@
 
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
 import { db } from '@/lib/db';
-import { employees, performance } from '@/storage/database/shared/schema';
+import { employees, performanceRecords } from '@/storage/database/shared/schema';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 
 export interface PerformancePrediction {
@@ -106,7 +106,7 @@ export class MultiModelPerformancePredictionService {
     const allEmployees = await db
       .select()
       .from(employees)
-      .where(and(eq(employees.companyId, companyId), eq(employees.status, 'active')));
+      .where(and(eq(employees.companyId, companyId), eq(employees.employmentStatus, 'active')));
 
     for (const employee of allEmployees) {
       try {
@@ -125,9 +125,9 @@ export class MultiModelPerformancePredictionService {
   private async getPerformanceHistory(employeeId: string): Promise<any> {
     const results = await db
       .select()
-      .from(performance)
-      .where(eq(performance.employeeId, employeeId))
-      .orderBy(performance.assessmentDate);
+      .from(performanceRecords)
+      .where(eq(performanceRecords.employeeId, employeeId))
+      .orderBy(performanceRecords.createdAt);
 
     const [employee] = await db
       .select()
@@ -135,7 +135,7 @@ export class MultiModelPerformancePredictionService {
       .where(eq(employees.id, employeeId))
       .limit(1);
 
-    const scores = results.map(r => r.score);
+    const scores = results.map(r => r.finalScore).filter((s): s is number => s !== null);
     const currentScore = scores.length > 0 ? scores[scores.length - 1] : 0;
 
     return {
@@ -179,8 +179,8 @@ export class MultiModelPerformancePredictionService {
 - 当前绩效：${history.currentScore}分
 - 绩效趋势：${history.trend > 0 ? '上升' : history.trend < 0 ? '下降' : '稳定'}
 - 绩效波动：${history.variance.toFixed(2)}
-- 部门：${employee?.department || '未知'}
-- 职位：${employee?.position || '未知'}
+- 部门：${employee?.departmentId || '未知'}
+- 职位：${employee?.positionId || '未知'}
 
 返回格式（JSON）：
 {
@@ -218,14 +218,14 @@ export class MultiModelPerformancePredictionService {
     // 获取同部门同职位的员工
     const peers = await db
       .select()
-      .from(performance)
-      .innerJoin(employees, eq(performance.employeeId, employees.id))
+      .from(performanceRecords)
+      .innerJoin(employees, eq(performanceRecords.employeeId, employees.id))
       .where(
         and(
           eq(employees.companyId, companyId),
-          sql`${employees.department} = ${employee.department}`,
-          sql`${employees.position} = ${employee.position}`,
-          eq(employees.status, 'active')
+          sql`${employees.departmentId} = ${employee.departmentId}`,
+          sql`${employees.positionId} = ${employee.positionId}`,
+          eq(employees.employmentStatus, 'active')
         )
       )
       .limit(10);
@@ -233,7 +233,7 @@ export class MultiModelPerformancePredictionService {
     if (peers.length === 0) return 0;
 
     // 计算同职位员工的平均绩效
-    const avgPeerScore = peers.reduce((sum, p) => sum + p.performance.score, 0) / peers.length;
+    const avgPeerScore = peers.reduce((sum, p) => sum + (p.performance_records.finalScore || 0), 0) / peers.length;
 
     return Math.round(avgPeerScore);
   }

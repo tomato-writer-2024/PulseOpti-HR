@@ -56,26 +56,27 @@ export default function HRReportsPageContent() {
   const loadStats = useCallback(async (): Promise<HRStats> => {
     try {
       const cacheKey = `hr-stats-${selectedPeriod}-${selectedYear}`;
-      return await fetchWithCache<HRStats>(cacheKey, async () => {
+      const result = await fetchWithCache<any>(cacheKey, async () => {
         const response = await get<{ success: boolean; data?: HRStats }>(
           `/api/hr-reports/stats?period=${selectedPeriod}&year=${selectedYear}`
         );
-
-        return response.data || {
-          totalEmployees: 0,
-          activeEmployees: 0,
-          newHires: 0,
-          resignations: 0,
-          turnoverRate: 0,
-          avgAge: 0,
-          avgTenure: 0,
-          deptDistribution: [],
-          levelDistribution: [],
-          genderDistribution: { male: 0, female: 0, other: 0 },
-          educationDistribution: [],
-          monthlyStats: [],
-        };
+        return response;
       }, 10 * 60 * 1000);
+
+      return result?.data || {
+        totalEmployees: 0,
+        activeEmployees: 0,
+        newHires: 0,
+        resignations: 0,
+        turnoverRate: 0,
+        avgAge: 0,
+        avgTenure: 0,
+        deptDistribution: [],
+        levelDistribution: [],
+        genderDistribution: { male: 0, female: 0, other: 0 },
+        educationDistribution: [],
+        monthlyStats: [],
+      };
     } catch (err) {
       console.error('加载HR统计数据失败:', err);
       monitor.trackError('loadHRStats', err as Error);
@@ -89,7 +90,7 @@ export default function HRReportsPageContent() {
 
   const handleExport = useCallback(async () => {
     try {
-      const response = await get('/api/hr-reports/export', {
+      const response = await fetch('/api/hr-reports/export', {
         headers: { Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
       });
 
@@ -261,7 +262,7 @@ export default function HRReportsPageContent() {
                           <span className="text-sm font-medium">{percentage}%</span>
                         </div>
                       </div>
-                      <Progress value={parseFloat(percentage)} className="h-2" />
+                      <Progress value={parseFloat(String(percentage))} className="h-2" />
                     </div>
                   );
                 })}
@@ -300,7 +301,7 @@ export default function HRReportsPageContent() {
                           <span className="text-sm font-medium">{percentage}%</span>
                         </div>
                       </div>
-                      <Progress value={parseFloat(percentage)} className="h-2" />
+                      <Progress value={parseFloat(String(percentage))} className="h-2" />
                     </div>
                   );
                 })}
@@ -342,7 +343,7 @@ export default function HRReportsPageContent() {
                           <span className="text-sm font-medium">{percentage}%</span>
                         </div>
                       </div>
-                      <Progress value={parseFloat(percentage)} className="h-2" />
+                      <Progress value={parseFloat(String(percentage))} className="h-2" />
                     </div>
                   );
                 })}

@@ -7,10 +7,9 @@ import { db } from '@/lib/db/drizzle';
 import { 
   users, 
   employees, 
-  attendance, 
-  performanceReviews, 
-  recruitments,
-  interviewSessions,
+  attendanceRecords, 
+  performanceRecords, 
+  candidates,
   companies,
   departments
 } from '@/storage/database/shared/schema';

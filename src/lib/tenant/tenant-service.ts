@@ -357,10 +357,12 @@ export class TenantService {
       tenant.usage.lastResetDate = now;
     }
     
-    // 更新使用量
-    const currentValue = tenant.usage[resource] as number;
-    tenant.usage[resource] = currentValue + increment;
-    
+    // 更新使用量（排除 lastResetDate）
+    if (resource !== 'lastResetDate') {
+      const currentValue = tenant.usage[resource] as number;
+      tenant.usage[resource] = currentValue + increment;
+    }
+
     // TODO: 保存到数据库
     console.log('更新租户使用量:', tenantId, resource, increment);
     

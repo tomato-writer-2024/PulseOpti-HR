@@ -98,8 +98,8 @@ export class WorkflowManager {
 
   async deleteTemplate(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(workflowTemplates).where(eq(workflowTemplates.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(workflowTemplates).where(eq(workflowTemplates.id, id)).returning();
+    return !!deleted;
   }
 
   async getPublicTemplates(type?: string): Promise<WorkflowTemplate[]> {
@@ -256,8 +256,8 @@ export class WorkflowManager {
 
   async deleteInstance(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(workflowInstances).where(eq(workflowInstances.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(workflowInstances).where(eq(workflowInstances.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveInstances(companyId: string): Promise<WorkflowInstance[]> {

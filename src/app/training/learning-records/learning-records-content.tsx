@@ -91,8 +91,8 @@ export default function LearningRecordsContent() {
 
   const loadStats = useCallback((recordsList: LearningRecord[]) => {
     const total = recordsList.length;
-    const inProgress = recordsList.filter((item: any) => r => r.status === 'in_progress').length;
-    const completed = recordsList.filter((item: any) => r => r.status === 'completed').length;
+    const inProgress = recordsList.filter((r: any) => r.status === 'in_progress').length;
+    const completed = recordsList.filter((r: any) => r.status === 'completed').length;
     const avgProgress = total > 0
       ? recordsList.reduce((sum, r) => sum + r.progress, 0) / total
       : 0;
@@ -108,7 +108,8 @@ export default function LearningRecordsContent() {
   }, [selectedDepartment, selectedStatus, fetchRecords, loadRecords, loadStats]);
 
   const filteredRecords = useMemo(() => {
-    return records.filter((item: any) => record => {
+    if (!records) return [];
+    return records.filter((record: any) => {
       const matchesSearch = !debouncedQuery ||
         record.employeeName.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         record.courseTitle.toLowerCase().includes(debouncedQuery.toLowerCase());

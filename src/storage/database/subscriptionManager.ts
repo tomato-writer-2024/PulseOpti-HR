@@ -63,8 +63,8 @@ export class SubscriptionManager {
 
   async deleteSubscription(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(subscriptions).where(eq(subscriptions.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(subscriptions).where(eq(subscriptions.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveSubscription(companyId: string): Promise<Subscription | null> {

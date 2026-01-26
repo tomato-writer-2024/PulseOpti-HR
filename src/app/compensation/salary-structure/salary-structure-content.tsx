@@ -167,10 +167,10 @@ export default function SalaryStructureContent() {
 
   // 统计数据
   const stats = useMemo(() => {
-    const totalCost = salaryStructure.reduce((sum, item) => sum + item.amount, 0);
-    const averageSalary = departmentSalary.length > 0
-      ? Math.round(departmentSalary.reduce((sum, dept) => sum + dept.averageSalary * dept.headcount, 0) /
-          departmentSalary.reduce((sum, dept) => sum + dept.headcount, 0))
+    const totalCost = (salaryStructure || []).reduce((sum, item) => sum + item.amount, 0);
+    const averageSalary = (departmentSalary || []).length > 0
+      ? Math.round((departmentSalary || []).reduce((sum, dept) => sum + dept.averageSalary * dept.headcount, 0) /
+          (departmentSalary || []).reduce((sum, dept) => sum + dept.headcount, 0))
       : 0;
 
     return [
@@ -380,7 +380,7 @@ export default function SalaryStructureContent() {
               <CardHeader>
                 <CardTitle>薪酬构成占比</CardTitle>
                 <CardDescription>
-                  总薪酬成本: ¥{salaryStructure.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
+                  总薪酬成本: ¥{(salaryStructure || []).reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -390,11 +390,11 @@ export default function SalaryStructureContent() {
                       <Skeleton key={i} className="h-12 w-full" />
                     ))}
                   </div>
-                ) : salaryStructure.length === 0 ? (
+                ) : (salaryStructure || []).length === 0 ? (
                   <div className="text-center py-8 text-gray-500">暂无数据</div>
                 ) : (
                   <div className="space-y-3">
-                    {salaryStructure.map((item, index) => (
+                    {(salaryStructure || []).map((item, index) => (
                       <div key={item.category} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium">{item.category}</span>
@@ -437,7 +437,7 @@ export default function SalaryStructureContent() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {salaryStructure.map((item) => (
+                      {(salaryStructure || []).map((item) => (
                         <TableRow key={item.category}>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -492,7 +492,7 @@ export default function SalaryStructureContent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {departmentSalary.map((dept) => (
+                    {(departmentSalary || []).map((dept) => (
                       <TableRow key={dept.department}>
                         <TableCell className="font-medium">{dept.department}</TableCell>
                         <TableCell>{dept.headcount}</TableCell>
@@ -601,7 +601,7 @@ export default function SalaryStructureContent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {positionLevelSalary.map((level) => (
+                    {(positionLevelSalary || []).map((level) => (
                       <TableRow key={level.level}>
                         <TableCell>
                           <Badge className="bg-blue-600">{level.level}</Badge>
@@ -651,7 +651,7 @@ export default function SalaryStructureContent() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {positionLevelSalary.map((level) => {
+                  {(positionLevelSalary || []).map((level) => {
                     const min = parseInt(level.salaryRange.split(' - ')[0].replace(/,/g, ''));
                     const max = parseInt(level.salaryRange.split(' - ')[1].replace(/,/g, ''));
                     const bandwidth = ((max - min) / min) * 100;

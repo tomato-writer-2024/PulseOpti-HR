@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tenantService, Tenant } from './tenant-service';
+import { tenantService, Tenant, TenantConfig } from './tenant-service';
+import { eq } from 'drizzle-orm';
 
 export interface TenantContext {
   tenantId: string;
@@ -131,7 +132,7 @@ export async function withTenantAuth(
  */
 export async function checkTenantFeature(
   tenantId: string,
-  feature: keyof TenantContext['tenant']['quotas']['features'] | string
+  feature: string
 ): Promise<{
   available: boolean;
   reason?: string;
@@ -146,7 +147,7 @@ export async function checkTenantFeature(
   const config = await tenantService.getTenantConfig(tenantId);
   
   // 映射功能名称到配置key
-  const featureMap: Record<string, keyof TenantContext['tenant']['quotas']['features']> = {
+  const featureMap: Record<string, string> = {
     'ai-interview': 'aiInterview',
     'turnover-prediction': 'turnoverPrediction',
     'performance-prediction': 'performancePrediction',
@@ -161,7 +162,7 @@ export async function checkTenantFeature(
   const configKey = featureMap[feature];
   
   if (configKey) {
-    const enabled = config.features[configKey];
+    const enabled = config.features[configKey as keyof TenantConfig['features']];
     if (!enabled) {
       return { available: false, reason: '当前订阅计划不支持此功能' };
     }

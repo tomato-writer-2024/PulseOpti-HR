@@ -169,7 +169,7 @@ export default function TrainingPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -300,7 +300,7 @@ export default function TrainingPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">进行中</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {courses.filter((item: any) => (c) => c.status === 'ongoing').length}
+                  {courses.filter((c: any) => c.status === 'ongoing').length}
                 </p>
               </div>
               <Play className="h-8 w-8 text-green-600" />

@@ -207,7 +207,7 @@ export default function CompliancePageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -370,7 +370,7 @@ export default function CompliancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">生效中</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {contracts.filter((item: any) => (c) => c.status === 'active').length}
+                  {contracts.filter((item: any) => item.status === 'active').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -383,7 +383,7 @@ export default function CompliancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">试用期</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {contracts.filter((item: any) => (c) => c.status === 'probation').length}
+                  {contracts.filter((item: any) => item.status === 'probation').length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -396,9 +396,9 @@ export default function CompliancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">即将到期</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {contracts.filter((item: any) => (c) => {
+                  {contracts.filter((item: any) => {
                     const daysDiff = Math.floor(
-                      (new Date(c.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                      (new Date(item.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
                     );
                     return daysDiff > 0 && daysDiff <= 30;
                   }).length}
@@ -414,7 +414,7 @@ export default function CompliancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">待续签</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {contracts.filter((item: any) => (c) => c.status === 'renewing').length}
+                  {contracts.filter((item: any) => item.status === 'renewing').length}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-600" />

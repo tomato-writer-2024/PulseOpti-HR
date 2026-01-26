@@ -106,8 +106,8 @@ export async function updateTrainingCourse(
 
 export async function deleteTrainingCourse(id: string) {
   const db = await getDb();
-  const result = await db.delete(trainingCourses).where(eq(trainingCourses.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(trainingCourses).where(eq(trainingCourses.id, id)).returning();
+  return !!deleted;
 }
 
 export async function updateCourseRating(
@@ -253,8 +253,8 @@ export async function updateTrainingRecord(
 
 export async function deleteTrainingRecord(id: string) {
   const db = await getDb();
-  const result = await db.delete(trainingRecords).where(eq(trainingRecords.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(trainingRecords).where(eq(trainingRecords.id, id)).returning();
+  return !!deleted;
 }
 
 export async function completeTrainingRecord(

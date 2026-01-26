@@ -95,8 +95,8 @@ export class JobFamilyManager {
 
   async deleteFamily(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(jobFamilies).where(eq(jobFamilies.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(jobFamilies).where(eq(jobFamilies.id, id)).returning();
+    return !!deleted;
   }
 
   async getRootFamilies(companyId: string): Promise<JobFamily[]> {
@@ -211,8 +211,8 @@ export class JobFamilyManager {
 
   async deleteRank(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(jobRanks).where(eq(jobRanks.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(jobRanks).where(eq(jobRanks.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveRanks(companyId: string): Promise<JobRank[]> {
@@ -302,8 +302,8 @@ export class JobFamilyManager {
 
   async deleteGrade(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(jobGrades).where(eq(jobGrades.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(jobGrades).where(eq(jobGrades.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveGrades(companyId: string): Promise<JobGrade[]> {
@@ -393,8 +393,8 @@ export class JobFamilyManager {
 
   async deleteMapping(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(jobRankMappings).where(eq(jobRankMappings.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(jobRankMappings).where(eq(jobRankMappings.id, id)).returning();
+    return !!deleted;
   }
 
   async getMappingsByFamily(jobFamilyId: string): Promise<JobRankMapping[]> {

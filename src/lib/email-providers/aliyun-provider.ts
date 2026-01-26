@@ -51,7 +51,7 @@ export class AliyunProvider implements EmailProvider {
       const action = 'SingleSendMail';
 
       // 准备请求参数
-      const params = {
+      const params: Record<string, string> = {
         Action: action,
         Version: version,
         Format: 'JSON',
@@ -66,8 +66,8 @@ export class AliyunProvider implements EmailProvider {
         ToAddress: Array.isArray(options.to) ? options.to.join(',') : options.to,
         FromAlias: 'PulseOpti HR',
         Subject: options.subject,
-        HtmlBody: options.html,
-        TextBody: options.text,
+        HtmlBody: options.html || '',
+        TextBody: options.text || '',
       };
 
       // 计算签名

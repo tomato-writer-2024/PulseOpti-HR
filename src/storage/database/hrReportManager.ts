@@ -92,8 +92,8 @@ export class HRReportManager {
 
   async deleteTemplate(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(hrReportTemplates).where(eq(hrReportTemplates.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(hrReportTemplates).where(eq(hrReportTemplates.id, id)).returning();
+    return !!deleted;
   }
 
   async getPublicTemplates(category?: string): Promise<HrReportTemplate[]> {

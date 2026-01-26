@@ -149,7 +149,7 @@ export default function PerformancePageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -329,7 +329,7 @@ export default function PerformancePageContent() {
   };
 
   const handleRemoveGoal = (index: number) => {
-    const updatedGoals = formData.goals.filter((item: any) => (_, i) => i !== index);
+    const updatedGoals = formData.goals.filter((_: any, i: number) => i !== index);
     setFormData({ ...formData, goals: updatedGoals });
   };
 
@@ -380,7 +380,7 @@ export default function PerformancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">优秀（A）</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {performances.filter((item: any) => (p) => p.grade === 'A').length}
+                  {(performances || []).filter((p: any) => p.grade === 'A').length}
                 </p>
               </div>
               <Award className="h-8 w-8 text-green-600" />
@@ -408,7 +408,7 @@ export default function PerformancePageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">待审核</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {performances.filter((item: any) => (p) => p.status === 'pending_review').length}
+                  {(performances || []).filter((p: any) => p.status === 'pending_review').length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />

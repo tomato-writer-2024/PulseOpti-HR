@@ -161,7 +161,7 @@ export class RealtimeDashboardService {
       },
       // 招聘漏斗
       {
-        id: 'widget-recruitment',
+        id: 'widget-candidates',
         type: 'chart',
         title: '招聘漏斗',
         position: { x: 0, y: 2, w: 6, h: 2 },
@@ -257,8 +257,8 @@ export class RealtimeDashboardService {
       .where(
         and(
           eq(employees.companyId, companyId),
-          gte(employees.joinedAt, startDate),
-          lte(employees.joinedAt, endDate)
+          gte(employees.hireDate, startDate),
+          lte(employees.hireDate, endDate)
         )
       );
 
@@ -281,7 +281,7 @@ export class RealtimeDashboardService {
     const [result] = await db
       .select({ count: sql<number>`count(*)` })
       .from(employees)
-      .where(and(eq(employees.companyId, companyId), eq(employees.status, 'active')));
+      .where(and(eq(employees.companyId, companyId), eq(employees.employmentStatus, 'active')));
 
     const value = Number(result.count);
     const metric: Metric = {
@@ -301,20 +301,20 @@ export class RealtimeDashboardService {
   private async calculateAttendanceRate(companyId: string, date: Date): Promise<Metric> {
     const totalResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(attendance)
+      .from(attendanceRecords)
       .where(
         and(
-          sql`DATE(${attendance.date}) = DATE(${date})`
+          sql`DATE(${attendanceRecords.recordDate}) = DATE(${date})`
         )
       );
 
     const presentResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(attendance)
+      .from(attendanceRecords)
       .where(
         and(
-          sql`DATE(${attendance.date}) = DATE(${date})`,
-          eq(attendance.status, 'present')
+          sql`DATE(${attendanceRecords.recordDate}) = DATE(${date})`,
+          eq(attendanceRecords.status, 'present')
         )
       );
 
@@ -340,11 +340,11 @@ export class RealtimeDashboardService {
   private async calculateAvgPerformance(companyId: string, since: Date): Promise<Metric> {
     const [result] = await db
       .select({ avg: sql<number>`AVG(score)` })
-      .from(performance)
+      .from(performanceRecords)
       .where(
         and(
-          eq(performance.companyId, companyId),
-          gte(performance.assessmentDate, since)
+          eq(performanceRecords.companyId, companyId),
+          gte(performanceRecords.reviewedAt, since)
         )
       );
 
@@ -368,11 +368,11 @@ export class RealtimeDashboardService {
   private async calculateOpenPositions(companyId: string): Promise<Metric> {
     const [result] = await db
       .select({ count: sql<number>`count(*)` })
-      .from(recruitment)
+      .from(candidates)
       .where(
         and(
-          eq(recruitment.companyId, companyId),
-          eq(recruitment.status, 'open')
+          eq(candidates.companyId, companyId),
+          eq(candidates.status, 'open')
         )
       );
 
@@ -402,8 +402,8 @@ export class RealtimeDashboardService {
       .where(
         and(
           eq(employees.companyId, companyId),
-          gte(employees.joinedAt, startDate),
-          lte(employees.joinedAt, endDate)
+          gte(employees.hireDate, startDate),
+          lte(employees.hireDate, endDate)
         )
       );
 
@@ -433,8 +433,8 @@ export class RealtimeDashboardService {
       .where(
         and(
           eq(employees.companyId, companyId),
-          gte(employees.leftAt, startDate),
-          lte(employees.leftAt, endDate)
+          gte(employees.updatedAt, startDate),
+          lte(employees.updatedAt, endDate)
         )
       );
 
@@ -461,7 +461,7 @@ export class RealtimeDashboardService {
       .where(
         and(
           eq(employees.companyId, companyId),
-          gte(employees.leftAt, since)
+          gte(employees.updatedAt, since)
         )
       );
 
@@ -522,12 +522,12 @@ export class RealtimeDashboardService {
   ): Promise<Metric> {
     const [result] = await db
       .select({ count: sql<number>`count(*)` })
-      .from(training)
+      .from(trainingRecords)
       .where(
         and(
-          eq(training.companyId, companyId),
-          gte(training.completedAt, startDate),
-          lte(training.completedAt, endDate)
+          eq(trainingRecords.companyId, companyId),
+          gte(trainingRecords.completionDate, startDate),
+          lte(trainingRecords.completionDate, endDate)
         )
       );
 

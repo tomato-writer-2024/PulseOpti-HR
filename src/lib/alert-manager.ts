@@ -306,9 +306,8 @@ class AlertManager {
             break;
           case 'email':
             // 发送邮件通知
-            if (emailService.isReady()) {
-              // 获取接收人邮箱
-              const recipientEmails = await this.getRecipientEmails(rule.recipients);
+            // 获取接收人邮箱
+            const recipientEmails = await this.getRecipientEmails(rule.recipients);
               if (recipientEmails.length > 0) {
                 await emailService.sendAlertEmail({
                   to: recipientEmails,
@@ -320,9 +319,6 @@ class AlertManager {
               } else {
                 console.warn('没有配置接收人邮箱，跳过邮件通知');
               }
-            } else {
-              console.warn('邮件服务未配置，跳过邮件通知');
-            }
             break;
           case 'sms':
             // 发送短信通知（可集成短信服务）

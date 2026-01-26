@@ -63,8 +63,8 @@ export class CandidateManager {
 
   async deleteCandidate(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(candidates).where(eq(candidates.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(candidates).where(eq(candidates.id, id)).returning();
+    return !!deleted;
   }
 
   async getJobCandidates(jobId: string): Promise<Candidate[]> {

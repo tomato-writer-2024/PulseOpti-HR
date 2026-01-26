@@ -65,10 +65,15 @@ export default function OffboardingPageContent() {
   const [viewingRecord, setViewingRecord] = useState<OffboardingRecord | null>(null);
   const [currentPage, setCurrentPage] = useLocalStorage('offboarding-page', 1);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    employeeId: string;
+    lastWorkDay: string;
+    resignationType: 'voluntary' | 'involuntary' | 'retirement' | 'contract_end';
+    reason: string;
+  }>({
     employeeId: '',
     lastWorkDay: '',
-    resignationType: 'voluntary' as const,
+    resignationType: 'voluntary',
     reason: '',
   });
 
@@ -122,7 +127,7 @@ export default function OffboardingPageContent() {
 
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
-      setSelectedIds(records.map((r) => r.id));
+      setSelectedIds((records || []).map((r) => r.id));
     } else {
       setSelectedIds([]);
     }
@@ -132,7 +137,7 @@ export default function OffboardingPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   }, [selectedIds]);
 
@@ -178,7 +183,7 @@ export default function OffboardingPageContent() {
 
       if (response.success) {
         setDialogOpen(false);
-        await fetchRecords();
+        await fetchRecords(loadOffboardingRecords);
       }
     } catch (err) {
       console.error('保存离职记录失败:', err);
@@ -194,8 +199,8 @@ export default function OffboardingPageContent() {
 
     try {
       await del<{ success: boolean }>(`/api/offboarding/records/${id}`);
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
-      await fetchRecords();
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
+      await fetchRecords(loadOffboardingRecords);
     } catch (err) {
       console.error('删除离职记录失败:', err);
       monitor.trackError('deleteOffboardingRecord', err as Error);
@@ -205,18 +210,18 @@ export default function OffboardingPageContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: records.length,
-    pending: records.filter((item: any) => (r) => r.status === 'pending').length,
-    processing: records.filter((item: any) => (r) => r.status === 'processing').length,
-    completed: records.filter((item: any) => (r) => r.status === 'completed').length,
+    total: (records || []).length,
+    pending: (records || []).filter((r: any) => r.status === 'pending').length,
+    processing: (records || []).filter((r: any) => r.status === 'processing').length,
+    completed: (records || []).filter((r: any) => r.status === 'completed').length,
   }), [records]);
 
   // 过滤后的记录
   const filteredRecords = useMemo(() => {
-    let result = [...records];
+    let result = [...(records || [])];
 
     if (debouncedKeyword) {
-      result = result.filter((item: any) => r =>
+      result = result.filter((r: any) =>
         r.employeeName.toLowerCase().includes(debouncedKeyword.toLowerCase()) ||
         r.employeeId.toLowerCase().includes(debouncedKeyword.toLowerCase())
       );
@@ -284,7 +289,7 @@ export default function OffboardingPageContent() {
               <AlertTriangle className="h-5 w-5" />
               <span>加载失败: {error.message}</span>
             </div>
-            <Button onClick={fetchRecords} variant="outline">
+            <Button onClick={() => fetchRecords(loadOffboardingRecords)} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               重试
             </Button>

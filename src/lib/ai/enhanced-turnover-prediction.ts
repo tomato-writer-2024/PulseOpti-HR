@@ -82,7 +82,7 @@ export class EnhancedTurnoverPredictionService {
     }
 
     // 计算在职时长
-    const joinedAt = employee.joinedAt ? new Date(employee.joinedAt) : new Date();
+    const joinedAt = employee.hireDate ? new Date(employee.hireDate) : new Date();
     const tenure = Math.floor((Date.now() - joinedAt.getTime()) / (1000 * 60 * 60 * 24 * 30));
 
     // 获取绩效数据
@@ -102,13 +102,13 @@ export class EnhancedTurnoverPredictionService {
     return {
       employeeId,
       tenure,
-      age: this.calculateAge(employee.dateOfBirth),
-      positionLevel: this.getPositionLevel(employee.position),
-      department: employee.department || '',
+      age: this.calculateAge(employee.birthDate?.toISOString()),
+      positionLevel: this.getPositionLevel(employee.positionId || undefined),
+      department: employee.departmentId || '',
       avgPerformanceScore: performanceData.avgScore,
       performanceTrend: performanceData.trend,
       performanceVariance: performanceData.variance,
-      recentPerformanceScore: performanceData.recentScore,
+      recentPerformanceScore: performanceData.recentScore || 0,
       attendanceRate: attendanceData.rate,
       lateCount: attendanceData.lateCount,
       earlyLeaveCount: attendanceData.earlyLeaveCount,
@@ -182,14 +182,14 @@ export class EnhancedTurnoverPredictionService {
     const results: TurnoverRisk[] = [];
 
     for (const employee of allEmployees) {
-      if (employee.status !== 'active') continue;
+      if (employee.employmentStatus !== 'active') continue;
 
       try {
         const features = await this.extractFeatures(employee.id, companyId);
         const risk = await this.predictTurnoverRisk(features);
         
         risk.employeeName = employee.name;
-        risk.position = employee.position || '';
+        risk.position = employee.positionId || '';
         
         results.push(risk);
       } catch (error) {
@@ -219,17 +219,17 @@ export class EnhancedTurnoverPredictionService {
 
   private async getPerformanceData(employeeId: string) {
     const results = await db
-      .select({ score: performance.score })
-      .from(performance)
-      .where(eq(performance.employeeId, employeeId));
+      .select({ score: performanceRecords.finalScore })
+      .from(performanceRecords)
+      .where(eq(performanceRecords.employeeId, employeeId));
 
     if (results.length === 0) {
       return { avgScore: 0, trend: 0, variance: 0, recentScore: 0 };
     }
 
-    const scores = results.map(r => r.score);
-    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length;
+    const scores = results.map(r => r.score).filter((s): s is number => s !== null);
+    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const variance = scores.length > 0 ? scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length : 0;
     const trend = scores.length > 1 ? scores[scores.length - 1] - scores[0] : 0;
 
     return {
@@ -243,8 +243,8 @@ export class EnhancedTurnoverPredictionService {
   private async getAttendanceData(employeeId: string) {
     const results = await db
       .select()
-      .from(attendance)
-      .where(eq(attendance.employeeId, employeeId));
+      .from(attendanceRecords)
+      .where(eq(attendanceRecords.employeeId, employeeId));
 
     if (results.length === 0) {
       return { rate: 100, lateCount: 0, earlyLeaveCount: 0, leaveCount: 0, overtimeHours: 0 };

@@ -278,7 +278,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           pathname === sub.href
         );
         if (activeSubItem) {
-          crumbs.push({ name: activeSubItem.name, href: activeSubItem.href });
+          crumbs.push({ name: activeSubItem.name, href: activeSubItem.href, icon: FileText });
         }
       }
     }
@@ -363,7 +363,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             return (
               <div key={item.name}>
                 <div
-                  onClick={() => toggleMenu(item.name, hasSubItems)}
+                  onClick={() => toggleMenu(item.name, hasSubItems || false)}
                   className={cn(
                     'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer select-none',
                     'hover:shadow-sm',

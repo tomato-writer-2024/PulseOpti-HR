@@ -286,7 +286,7 @@ export default function OrdersContent() {
                 </TableHeader>
                 <TableBody>
                   {orders
-                    .filter((item: any) => (order) => order.status === '已完成')
+                    .filter((order: any) => order.status === '已完成')
                     .map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-sm">{order.id}</TableCell>
@@ -366,7 +366,7 @@ export default function OrdersContent() {
                 </TableHeader>
                 <TableBody>
                   {orders
-                    .filter((item: any) => (order) => order.status === '处理中')
+                    .filter((order: any) => order.status === '处理中')
                     .map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-sm">{order.id}</TableCell>

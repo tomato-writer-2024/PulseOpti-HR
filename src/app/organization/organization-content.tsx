@@ -138,7 +138,7 @@ export default function OrganizationPageContent() {
       }
 
       setDialogOpen(false);
-      await fetchDepartments();
+      await fetchDepartments(loadDepartments);
     } catch (err) {
       console.error('保存部门失败:', err);
       monitor.trackError('saveDepartment', err as Error);
@@ -153,7 +153,7 @@ export default function OrganizationPageContent() {
 
     try {
       await del<{ success: boolean }>(`/api/departments/${id}`);
-      await fetchDepartments();
+      await fetchDepartments(loadDepartments);
     } catch (err) {
       console.error('删除部门失败:', err);
       monitor.trackError('deleteDepartment', err as Error);
@@ -163,10 +163,10 @@ export default function OrganizationPageContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: departments.length,
-    level1: departments.filter((item: any) => d => d.level === 1).length,
-    totalEmployees: departments.reduce((sum, d) => sum + d.employeeCount, 0),
-    maxLevel: Math.max(...departments.map(d => d.level), 0),
+    total: (departments || []).length,
+    level1: (departments || []).filter((d: any) => d.level === 1).length,
+    totalEmployees: (departments || []).reduce((sum, d) => sum + d.employeeCount, 0),
+    maxLevel: Math.max(...(departments || []).map(d => d.level), 0),
   }), [departments]);
 
   // 过滤后的部门
@@ -191,7 +191,7 @@ export default function OrganizationPageContent() {
       }, []);
     };
 
-    return filterTree(departments);
+    return filterTree(departments || []);
   }, [departments, debouncedKeyword]);
 
   const getLevelBadge = useCallback((level: number) => {
@@ -200,7 +200,7 @@ export default function OrganizationPageContent() {
     return <Badge className={color}>L{level}</Badge>;
   }, []);
 
-  const renderDepartment = useCallback((dept: Department, indent = 0): JSX.Element => {
+  const renderDepartment = useCallback((dept: Department, indent = 0): React.ReactElement => {
     const hasChildren = dept.children && dept.children.length > 0;
     const isExpanded = expandedIds.has(dept.id);
 
@@ -275,7 +275,7 @@ export default function OrganizationPageContent() {
               <AlertTriangle className="h-5 w-5" />
               <span>加载失败: {error.message}</span>
             </div>
-            <Button onClick={fetchDepartments} variant="outline">
+            <Button onClick={() => fetchDepartments(loadDepartments)} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               重试
             </Button>
@@ -413,11 +413,11 @@ export default function OrganizationPageContent() {
             <div className="p-8 flex justify-center">
               <Skeleton className="h-12 w-full" />
             </div>
-          ) : filteredDepartments.length === 0 ? (
+          ) : (filteredDepartments || []).length === 0 ? (
             <div className="p-8 text-center text-gray-500">暂无部门数据</div>
           ) : (
             <div>
-              {filteredDepartments.map((dept) => renderDepartment(dept))}
+              {(filteredDepartments || []).map((dept) => renderDepartment(dept))}
             </div>
           )}
         </CardContent>

@@ -332,7 +332,7 @@ export default function JobHierarchyContent() {
 
       <div className="grid gap-4">
         {jobFamilies
-          .filter((item: any) => family =>
+          .filter((family: any) =>
             searchQuery === '' ||
             family.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             family.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -438,7 +438,7 @@ export default function JobHierarchyContent() {
             <TableBody>
               {jobRanks
                 .sort((a, b) => a.sequence - b.sequence)
-                .filter((item: any) => rank =>
+                .filter((rank: any) =>
                   searchQuery === '' ||
                   rank.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   rank.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -504,7 +504,7 @@ export default function JobHierarchyContent() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {jobGrades
           .sort((a, b) => a.sequence - b.sequence)
-          .filter((item: any) => grade =>
+          .filter((grade: any) =>
             searchQuery === '' ||
             grade.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             grade.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -585,7 +585,7 @@ export default function JobHierarchyContent() {
             </TableHeader>
             <TableBody>
               {jobRankMappings
-                .filter((item: any) => mapping =>
+                .filter((mapping: any) =>
                   searchQuery === '' ||
                   mapping.positionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   mapping.jobFamilyName.toLowerCase().includes(searchQuery.toLowerCase())

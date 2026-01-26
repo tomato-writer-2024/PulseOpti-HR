@@ -239,7 +239,7 @@ export default function WorkflowPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -383,7 +383,7 @@ export default function WorkflowPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">运行中</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {workflows.filter((item: any) => (w) => w.status === 'active').length}
+                  {workflows.filter((w: any) => w.status === 'active').length}
                 </p>
               </div>
               <Play className="h-8 w-8 text-green-600" />
@@ -396,7 +396,7 @@ export default function WorkflowPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">草稿</p>
                 <p className="text-2xl font-bold text-gray-600">
-                  {workflows.filter((item: any) => (w) => w.status === 'draft').length}
+                  {workflows.filter((w: any) => w.status === 'draft').length}
                 </p>
               </div>
               <Edit className="h-8 w-8 text-gray-600" />
@@ -409,7 +409,7 @@ export default function WorkflowPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">已暂停</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {workflows.filter((item: any) => (w) => w.status === 'paused').length}
+                  {workflows.filter((w: any) => w.status === 'paused').length}
                 </p>
               </div>
               <Pause className="h-8 w-8 text-yellow-600" />

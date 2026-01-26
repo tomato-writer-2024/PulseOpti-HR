@@ -63,8 +63,8 @@ export class JobManager {
 
   async deleteJob(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(jobs).where(eq(jobs.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(jobs).where(eq(jobs.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveJobs(companyId: string): Promise<Job[]> {

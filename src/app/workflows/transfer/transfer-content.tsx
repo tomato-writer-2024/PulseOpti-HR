@@ -129,7 +129,7 @@ export default function TransferContent() {
 
   const filteredWorkflows = selectedStatus === 'all'
     ? transferWorkflows
-    : transferWorkflows.filter((item: any) => w => w.status === selectedStatus);
+    : transferWorkflows.filter((w: any) => w.status === selectedStatus);
 
   return (
     <div className="space-y-6">

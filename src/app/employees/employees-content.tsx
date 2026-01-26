@@ -164,7 +164,7 @@ export default function EmployeesPageContent() {
   }, []);
 
   // 筛选员工
-  const filteredEmployees = (employees || []).filter((item: any) => employee => {
+  const filteredEmployees = (employees || []).filter((employee: any) => {
     if (filters.department && employee.department !== filters.department) {
       return false;
     }
@@ -200,7 +200,7 @@ export default function EmployeesPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => selectedId => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -382,9 +382,9 @@ export default function EmployeesPageContent() {
       <div className="grid gap-4 md:grid-cols-4">
         {[
           { label: '总员工数', value: (employees || []).length, icon: User, color: 'text-blue-600' },
-          { label: '在职员工', value: (employees || []).filter((item: any) => e => e.status === 'active').length, icon: Building2, color: 'text-green-600' },
-          { label: '试用期', value: (employees || []).filter((item: any) => e => e.status === 'probation').length, icon: Calendar, color: 'text-yellow-600' },
-          { label: '离职员工', value: (employees || []).filter((item: any) => e => e.status === 'resigned').length, icon: TrendingUp, color: 'text-gray-600' },
+          { label: '在职员工', value: (employees || []).filter((e: any) => e.status === 'active').length, icon: Building2, color: 'text-green-600' },
+          { label: '试用期', value: (employees || []).filter((e: any) => e.status === 'probation').length, icon: Calendar, color: 'text-yellow-600' },
+          { label: '离职员工', value: (employees || []).filter((e: any) => e.status === 'resigned').length, icon: TrendingUp, color: 'text-gray-600' },
         ].map((stat, index) => (
           <Card key={index}>
             <CardContent className="pt-6">

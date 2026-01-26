@@ -19,9 +19,9 @@ export async function cachedGet<T>(
 ): Promise<T> {
   return fetchWithCache<T>(
     cacheKey,
-    async () => {
+    async (): Promise<T> => {
       const response = await get<{ data?: T }>(url);
-      return response.data || ({} as T);
+      return (response.data || ({} as T)) as T;
     },
     ttl
   );

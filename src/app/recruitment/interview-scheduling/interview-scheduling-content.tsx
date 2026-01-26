@@ -121,10 +121,10 @@ export default function InterviewSchedulingContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: interviews.length,
-    upcoming: interviews.filter((item: any) => i => i.status === 'scheduled' || i.status === 'confirmed').length,
-    completed: interviews.filter((item: any) => i => i.status === 'completed').length,
-    today: interviews.filter((item: any) => i => i.date === format(new Date(), 'yyyy-MM-dd')).length,
+    total: (interviews || []).length,
+    upcoming: (interviews || []).filter((i: any) => i.status === 'scheduled' || i.status === 'confirmed').length,
+    completed: (interviews || []).filter((i: any) => i.status === 'completed').length,
+    today: (interviews || []).filter((i: any) => i.date === format(new Date(), 'yyyy-MM-dd')).length,
   }), [interviews]);
 
   const getStatusColor = useCallback((status: string) => {
@@ -264,7 +264,8 @@ export default function InterviewSchedulingContent() {
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={setSelectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        required={false}
                         initialFocus
                       />
                     </PopoverContent>
@@ -442,7 +443,7 @@ export default function InterviewSchedulingContent() {
                 <Skeleton key={i} className="h-32 w-full" />
               ))}
             </div>
-          ) : interviews.length === 0 ? (
+          ) : (interviews || []).length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>暂无面试安排</p>
@@ -463,7 +464,7 @@ export default function InterviewSchedulingContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {interviews.map((interview) => (
+                {(interviews || []).map((interview) => (
                   <TableRow key={interview.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">

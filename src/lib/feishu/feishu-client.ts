@@ -11,7 +11,7 @@ interface FeishuConfig {
   serverUrl?: string;
 }
 
-interface FeishuUser {
+export interface FeishuUser {
   userId: string;
   openId: string;
   unionId: string;
@@ -65,7 +65,7 @@ export class FeishuClient {
   async getAccessToken(): Promise<string> {
     // 检查token是否有效
     if (this.accessToken && Date.now() < this.tokenExpireTime) {
-      return this.accessToken;
+      return this.accessToken!;
     }
 
     // 获取新的token
@@ -89,7 +89,7 @@ export class FeishuClient {
     this.accessToken = data.tenant_access_token;
     this.tokenExpireTime = Date.now() + (data.expire - 60) * 1000; // 提前60秒过期
 
-    return this.accessToken;
+    return this.accessToken!;
   }
 
   /**

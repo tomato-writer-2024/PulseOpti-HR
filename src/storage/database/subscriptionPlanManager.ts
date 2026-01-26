@@ -72,8 +72,8 @@ export class SubscriptionPlanManager {
 
   async deletePlan(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id)).returning();
+    return !!deleted;
   }
 
   // 计算价格

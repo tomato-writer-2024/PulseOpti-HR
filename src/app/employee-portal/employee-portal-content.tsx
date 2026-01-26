@@ -229,7 +229,7 @@ export default function EmployeePortalContent() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">待请假审批</p>
                     <p className="text-2xl font-bold text-yellow-600">
-                      {leaveApplications.filter((item: any) => l => l.status === 'pending').length}
+                      {(leaveApplications || []).filter((l: any) => l.status === 'pending').length}
                     </p>
                   </div>
                   <Clock className="h-8 w-8 text-yellow-600" />
@@ -242,7 +242,7 @@ export default function EmployeePortalContent() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">未读通知</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {notifications.filter((item: any) => n => !n.isRead).length}
+                      {(notifications || []).filter((n: any) => !n.isRead).length}
                     </p>
                   </div>
                   <Bell className="h-8 w-8 text-blue-600" />
@@ -266,7 +266,7 @@ export default function EmployeePortalContent() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">本月薪资</p>
                     <p className="text-2xl font-bold text-purple-600">
-                      ¥{payslips[0]?.netSalary?.toLocaleString() || '0'}
+                      ¥{(payslips || [])[0]?.netSalary?.toLocaleString() || '0'}
                     </p>
                   </div>
                   <DollarSign className="h-8 w-8 text-purple-600" />
@@ -286,11 +286,11 @@ export default function EmployeePortalContent() {
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : (notifications || []).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">暂无通知</div>
               ) : (
                 <div className="space-y-3">
-                  {notifications.slice(0, 5).map((notification) => (
+                  {(notifications || []).slice(0, 5).map((notification) => (
                     <div
                       key={notification.id}
                       className={`p-4 rounded-lg border ${
@@ -344,11 +344,11 @@ export default function EmployeePortalContent() {
                     <Skeleton key={i} className="h-20 w-full" />
                   ))}
                 </div>
-              ) : leaveApplications.length === 0 ? (
+              ) : (leaveApplications || []).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">暂无请假记录</div>
               ) : (
                 <div className="space-y-3">
-                  {leaveApplications.map((leave) => (
+                  {(leaveApplications || []).map((leave) => (
                     <Card key={leave.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
@@ -392,11 +392,11 @@ export default function EmployeePortalContent() {
                     <Skeleton key={i} className="h-24 w-full" />
                   ))}
                 </div>
-              ) : payslips.length === 0 ? (
+              ) : (payslips || []).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">暂无工资条记录</div>
               ) : (
                 <div className="space-y-3">
-                  {payslips.map((payslip) => (
+                  {(payslips || []).map((payslip) => (
                     <Card key={payslip.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
@@ -446,11 +446,11 @@ export default function EmployeePortalContent() {
                     <Skeleton key={i} className="h-20 w-full" />
                   ))}
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : (notifications || []).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">暂无通知</div>
               ) : (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
+                  {(notifications || []).map((notification) => (
                     <Card
                       key={notification.id}
                       className={notification.isRead ? 'bg-gray-50 dark:bg-gray-800' : ''}

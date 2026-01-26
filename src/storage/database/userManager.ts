@@ -117,8 +117,8 @@ export class UserManager {
 
   async deleteUser(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(users).where(eq(users.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(users).where(eq(users.id, id)).returning();
+    return !!deleted;
   }
 
   async getCompanyUsers(companyId: string): Promise<User[]> {

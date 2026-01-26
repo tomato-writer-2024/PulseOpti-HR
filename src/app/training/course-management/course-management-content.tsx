@@ -119,7 +119,8 @@ export default function CourseManagementContent() {
   }, [categoryFilter, fetchCourses, loadCourses, loadStats]);
 
   const filteredCourses = useMemo(() => {
-    return courses.filter((item: any) => course => {
+    if (!courses) return [];
+    return courses.filter((course: any) => {
       const matchesSearch = !debouncedQuery ||
         course.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         (course.description && course.description.toLowerCase().includes(debouncedQuery.toLowerCase()));

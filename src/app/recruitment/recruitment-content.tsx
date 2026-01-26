@@ -306,7 +306,7 @@ export default function RecruitmentPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -468,7 +468,7 @@ export default function RecruitmentPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">招聘中</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {positions.filter((item: any) => (p) => p.status === 'open').length}
+                  {positions.filter((p: any) => p.status === 'open').length}
                 </p>
               </div>
               <UserPlus className="h-8 w-8 text-green-600" />
@@ -492,7 +492,7 @@ export default function RecruitmentPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">待处理</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {candidates.filter((item: any) => (c) => c.status === 'new').length}
+                  {candidates.filter((c: any) => c.status === 'new').length}
                 </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -505,7 +505,7 @@ export default function RecruitmentPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">已录用</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {candidates.filter((item: any) => (c) => c.status === 'hired').length}
+                  {candidates.filter((c: any) => c.status === 'hired').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-600" />

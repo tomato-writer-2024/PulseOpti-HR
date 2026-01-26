@@ -141,19 +141,17 @@ export default function EfficiencyPageContent() {
 
   const loadDashboardData = useCallback(async () => {
     try {
-      return await fetchWithCache<DashboardData>('efficiency-dashboard', async () => {
+      const result = await fetchWithCache<any>('efficiency-dashboard', async () => {
         const response = await get<{ success: boolean; data?: DashboardData }>(
           '/api/efficiency/dashboard'
         );
-
-        if (response.success && response.data) {
-          if (!selectedMetric && response.data.keyMetrics.length > 0) {
-            setSelectedMetric(response.data.keyMetrics[0].code);
-          }
-          return response.data;
-        }
-        return null;
+        return response;
       }, 2 * 60 * 1000); // 2分钟缓存
+
+      if (result?.data && (!selectedMetric || selectedMetric === null) && result.data.keyMetrics.length > 0) {
+        setSelectedMetric(result.data.keyMetrics[0].code);
+      }
+      return result?.data || null;
     } catch (error) {
       console.error('获取仪表盘数据失败:', error);
       monitor.trackError('loadDashboardData', error as Error);
@@ -185,7 +183,7 @@ export default function EfficiencyPageContent() {
         '/api/efficiency/dashboard',
         { forceRecalculate: true }
       );
-      await fetchDashboardData();
+      await fetchDashboardData(loadDashboardData);
       toast.success('数据已刷新');
     } catch (error) {
       console.error('刷新失败:', error);
@@ -211,7 +209,8 @@ export default function EfficiencyPageContent() {
       );
 
       if (response.success && response.data) {
-        setAttributionAnalysis(response.data);
+        const analysisData = response.data as any;
+        setAttributionAnalysis(analysisData || null);
         toast.success('归因分析完成');
       }
     } catch (error) {
@@ -234,7 +233,8 @@ export default function EfficiencyPageContent() {
       );
 
       if (response.success && response.data) {
-        setPredictionAnalysis(response.data);
+        const predictionData = response.data as any;
+        setPredictionAnalysis(predictionData || null);
         toast.success('预测分析完成');
       }
     } catch (error) {
@@ -665,9 +665,9 @@ export default function EfficiencyPageContent() {
                     <Skeleton key={i} className="h-48 w-full" />
                   ))}
                 </div>
-              ) : recommendations.length > 0 ? (
+              ) : (recommendations || []).length > 0 ? (
                 <div className="space-y-4">
-                  {recommendations.map((rec) => (
+                  {(recommendations || []).map((rec) => (
                     <div
                       key={rec.id}
                       className="rounded-lg border p-6 transition-all hover:shadow-md"

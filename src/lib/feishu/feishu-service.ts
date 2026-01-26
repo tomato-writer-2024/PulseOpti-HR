@@ -14,6 +14,7 @@ export interface FeishuSyncOptions {
   syncUsers?: boolean;
   departmentId?: string;
   forceSync?: boolean;
+  companyId?: string; // 企业ID，同步部门和用户时必填
 }
 
 export interface FeishuSyncResult {
@@ -50,34 +51,42 @@ export class FeishuService {
   async ssoLogin(code: string): Promise<FeishuSSOUser> {
     const feishuUser = await feishuClient.getUserInfoByCode(code);
 
-    // 检查用户是否存在
+    // 检查用户是否存在（通过email或username）
+    // 注意：users表没有openId和unionId字段，暂时使用email匹配
     const existingUser = await db.query.users.findFirst({
       where: or(
-        eq(users.openId, feishuUser.openId),
-        eq(users.unionId, feishuUser.unionId)
+        eq(users.email, feishuUser.email || ''),
+        eq(users.username, feishuUser.userId)
       ),
     });
 
     if (!existingUser) {
-      // 创建新用户
+      // 创建新用户（只使用users表实际存在的字段）
       const newUser = await db.insert(users).values({
         name: feishuUser.name,
         email: feishuUser.email || `${feishuUser.userId}@feishu.com`,
-        openId: feishuUser.openId,
-        unionId: feishuUser.unionId,
-        avatar: feishuUser.avatar,
+        username: feishuUser.userId,
+        avatarUrl: feishuUser.avatar,
         role: 'employee',
-        status: 'active',
-        source: 'feishu',
+        isActive: true,
+        userType: 'employee',
+        // 将openId和unionId存储在metadata中
+        metadata: {
+          feishu: {
+            openId: feishuUser.openId,
+            unionId: feishuUser.unionId,
+            userId: feishuUser.userId,
+          },
+        },
       }).returning();
 
       return {
         id: newUser[0].id,
         name: newUser[0].name,
-        email: newUser[0].email,
-        avatar: newUser[0].avatar,
-        openId: newUser[0].openId!,
-        unionId: newUser[0].unionId!,
+        email: newUser[0].email || '',
+        avatar: newUser[0].avatarUrl || '',
+        openId: feishuUser.openId,
+        unionId: feishuUser.unionId,
       };
     }
 
@@ -85,17 +94,28 @@ export class FeishuService {
     await db.update(users).set({
       name: feishuUser.name,
       email: feishuUser.email || existingUser.email,
-      avatar: feishuUser.avatar || existingUser.avatar,
+      avatarUrl: feishuUser.avatar || existingUser.avatarUrl,
       lastLoginAt: new Date(),
+      metadata: {
+        ...(existingUser.metadata as any),
+        feishu: {
+          openId: feishuUser.openId,
+          unionId: feishuUser.unionId,
+          userId: feishuUser.userId,
+        },
+      },
     }).where(eq(users.id, existingUser.id));
+
+    // 从metadata中获取openId和unionId
+    const feishuMeta = (existingUser.metadata as any)?.feishu || {};
 
     return {
       id: existingUser.id,
       name: existingUser.name,
-      email: existingUser.email,
-      avatar: existingUser.avatar,
-      openId: existingUser.openId!,
-      unionId: existingUser.unionId!,
+      email: existingUser.email || '',
+      avatar: existingUser.avatarUrl || '',
+      openId: feishuMeta.openId || feishuUser.openId,
+      unionId: feishuMeta.unionId || feishuUser.unionId,
     };
   }
 
@@ -146,6 +166,10 @@ export class FeishuService {
       // 获取飞书部门列表（根部门）
       const departmentsData = await feishuClient.getDepartmentUsers('0');
 
+      if (!options.companyId) {
+        throw new Error('companyId is required for department sync');
+      }
+
       for (const dept of departmentsData.users) {
         try {
           const existingDept = await db.query.departments.findFirst({
@@ -157,9 +181,10 @@ export class FeishuService {
             await db.insert(departments).values({
               name: dept.name,
               code: dept.userId,
+              companyId: options.companyId,
               parentId: null,
-              leaderId: null,
-              status: 'active',
+              managerId: null,
+              isActive: true,
             });
             result.departments.created++;
           } else if (options.forceSync) {
@@ -236,41 +261,61 @@ export class FeishuService {
    * 同步用户列表
    */
   private async syncUsersFromList(feishuUsers: FeishuUser[], result: FeishuSyncResult, options: FeishuSyncOptions): Promise<void> {
+    if (!options.companyId) {
+      throw new Error('companyId is required for user sync');
+    }
+
     for (const feishuUser of feishuUsers) {
       try {
+        // 通过email或username查找用户（users表没有openId和unionId字段）
         const existingUser = await db.query.users.findFirst({
           where: or(
-            eq(users.openId, feishuUser.openId),
-            eq(users.unionId, feishuUser.unionId),
-            eq(users.email, feishuUser.email || '')
+            eq(users.email, feishuUser.email || ''),
+            eq(users.username, feishuUser.userId)
           ),
         });
 
         if (!existingUser) {
-          // 创建新用户
+          // 创建新用户（使用正确的字段）
           await db.insert(users).values({
+            companyId: options.companyId,
             name: feishuUser.name,
             email: feishuUser.email || `${feishuUser.userId}@feishu.com`,
-            openId: feishuUser.openId,
-            unionId: feishuUser.unionId,
-            avatar: feishuUser.avatar,
+            username: feishuUser.userId,
+            avatarUrl: feishuUser.avatar,
             phone: feishuUser.mobile ? encryptionService.encrypt(feishuUser.mobile) : null,
-            position: feishuUser.position,
             role: 'employee',
-            status: feishuUser.status === 1 ? 'active' : 'inactive',
-            source: 'feishu',
-            joinedAt: new Date(),
+            isActive: feishuUser.status === 1,
+            userType: 'employee',
+            // 将openId和unionId存储在metadata中
+            metadata: {
+              feishu: {
+                openId: feishuUser.openId,
+                unionId: feishuUser.unionId,
+                userId: feishuUser.userId,
+                position: feishuUser.position,
+              },
+            },
+            createdAt: new Date(),
           });
           result.users.created++;
         } else if (options.forceSync) {
-          // 更新用户信息
+          // 更新用户信息（使用正确的字段）
           await db.update(users).set({
             name: feishuUser.name,
             email: feishuUser.email || existingUser.email,
-            avatar: feishuUser.avatar || existingUser.avatar,
+            avatarUrl: feishuUser.avatar || existingUser.avatarUrl,
             phone: feishuUser.mobile ? encryptionService.encrypt(feishuUser.mobile) : existingUser.phone,
-            position: feishuUser.position || existingUser.position,
-            status: feishuUser.status === 1 ? 'active' : 'inactive',
+            isActive: feishuUser.status === 1,
+            metadata: {
+              ...(existingUser.metadata as any),
+              feishu: {
+                openId: feishuUser.openId,
+                unionId: feishuUser.unionId,
+                userId: feishuUser.userId,
+                position: feishuUser.position,
+              },
+            },
           }).where(eq(users.id, existingUser.id));
           result.users.updated++;
         } else {
@@ -294,11 +339,14 @@ export class FeishuService {
       where: eq(users.id, userId),
     });
 
-    if (!user?.openId) {
+    // 从metadata中获取openId
+    const openId = (user?.metadata as any)?.feishu?.openId;
+
+    if (!openId) {
       throw new Error('用户未绑定飞书账号');
     }
 
-    await feishuClient.sendTextMessage(user.openId, message);
+    await feishuClient.sendTextMessage(openId, message);
   }
 
   /**
@@ -309,11 +357,14 @@ export class FeishuService {
       where: eq(users.id, userId),
     });
 
-    if (!user?.openId) {
+    // 从metadata中获取openId
+    const openId = (user?.metadata as any)?.feishu?.openId;
+
+    if (!openId) {
       throw new Error('用户未绑定飞书账号');
     }
 
-    await feishuClient.sendCardMessage(user.openId, card);
+    await feishuClient.sendCardMessage(openId, card);
   }
 
   /**
@@ -380,7 +431,10 @@ export class FeishuService {
       where: eq(users.id, userId),
     });
 
-    if (!user?.openId) {
+    // 从metadata中获取openId
+    const openId = (user?.metadata as any)?.feishu?.openId;
+
+    if (!openId) {
       throw new Error('用户未绑定飞书账号');
     }
 
@@ -388,7 +442,7 @@ export class FeishuService {
       approvalCode,
       form: {
         ...formData,
-        user_id: user.openId,
+        user_id: openId,
       },
     });
   }
@@ -397,10 +451,19 @@ export class FeishuService {
    * 解除用户飞书绑定
    */
   async unlinkFeishu(userId: string): Promise<void> {
-    await db.update(users).set({
-      openId: null,
-      unionId: null,
-    }).where(eq(users.id, userId));
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (user) {
+      // 从metadata中移除飞书信息
+      const metadata = (user.metadata as any) || {};
+      delete metadata.feishu;
+
+      await db.update(users).set({
+        metadata,
+      }).where(eq(users.id, userId));
+    }
   }
 
   /**

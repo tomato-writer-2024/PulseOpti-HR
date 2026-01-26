@@ -116,8 +116,8 @@ export class OrderManager {
 
   async deleteOrder(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(orders).where(eq(orders.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(orders).where(eq(orders.id, id)).returning();
+    return !!deleted;
   }
 
   // 生成订单号

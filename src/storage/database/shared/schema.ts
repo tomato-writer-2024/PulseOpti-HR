@@ -4884,8 +4884,8 @@ export const invitationCodes = pgTable(
     status: varchar("status", { length: 20 })
       .notNull()
       .default("pending"), // 状态：pending, used, expired
-    usedAt: timestamp("used_at", { length: 36 }), // 使用时间
-    expiresAt: timestamp("expires_at", { length: 36 }), // 过期时间
+    usedAt: timestamp("used_at", { withTimezone: true }), // 使用时间
+    expiresAt: timestamp("expires_at", { withTimezone: true }), // 过期时间
     rewardGiven: boolean("reward_given").notNull().default(false), // 奖励是否已发放
     rewardGivenAt: timestamp("reward_given_at", { withTimezone: true }), // 奖励发放时间
     rewardAmount: integer("reward_amount"), // 奖励金额（分）
@@ -4897,7 +4897,7 @@ export const invitationCodes = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }),
   },
   (table) => ({
-    codeIdx: index("invitation_codes_code_idx").unique().on(table.code),
+    codeIdx: index("invitation_codes_code_idx").on(table.code),
     inviterUserIdIdx: index("invitation_codes_inviter_user_id_idx").on(table.inviterUserId),
     inviteeUserIdIdx: index("invitation_codes_invitee_user_id_idx").on(table.inviteeUserId),
     statusIdx: index("invitation_codes_status_idx").on(table.status),

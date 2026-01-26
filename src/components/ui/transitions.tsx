@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 type TransitionType = 'fade' | 'slide' | 'scale' | 'flip' | 'none';
@@ -121,7 +121,7 @@ export function FadeIn({
     return () => clearTimeout(timer);
   }, [delay]);
 
-  const directions: Record<FadeInProps['direction'], string> = {
+  const directions: Record<string, string> = {
     up: 'translate-y',
     down: 'translate-y',
     left: '-translate-x',
@@ -130,7 +130,7 @@ export function FadeIn({
 
   const transform = isVisible
     ? 'opacity-100 translate-0'
-    : `opacity-0 ${directions[direction]}-${distance}`;
+    : `opacity-0 ${direction && directions[direction] ? `${directions[direction]}-${distance}` : ''}`;
 
   return (
     <div
@@ -173,14 +173,14 @@ export function SlideIn({
     return () => clearTimeout(timer);
   }, [delay]);
 
-  const transforms: Record<SlideInProps['direction'], string> = {
+  const transforms: Record<string, string> = {
     left: '-translate-x-full',
     right: 'translate-x-full',
     up: '-translate-y-full',
     down: 'translate-y-full',
   };
 
-  const transform = isVisible ? 'translate-0' : transforms[direction];
+  const transform = isVisible ? 'translate-0' : (direction ? transforms[direction] : '');
 
   return (
     <div

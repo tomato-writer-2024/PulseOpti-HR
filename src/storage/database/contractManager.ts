@@ -184,8 +184,8 @@ export class ContractManager {
 
   async deleteContract(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(employmentContracts).where(eq(employmentContracts.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(employmentContracts).where(eq(employmentContracts.id, id)).returning();
+    return !!deleted;
   }
 
   async getActiveContracts(companyId: string): Promise<EmploymentContract[]> {

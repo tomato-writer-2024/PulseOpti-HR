@@ -121,7 +121,8 @@ export default function TalentPoolContent() {
   }, [selectedPool, fetchMembers, loadMembers]);
 
   const filteredMembers = useMemo(() => {
-    return members.filter((item: any) => member => {
+    if (!members) return [];
+    return members.filter((member: any) => {
       const matchesSearch = !debouncedQuery ||
         member.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         member.position.toLowerCase().includes(debouncedQuery.toLowerCase());
@@ -204,10 +205,10 @@ export default function TalentPoolContent() {
                   </CardContent>
                 </Card>
               ))
-            ) : pools.length === 0 ? (
+            ) : (pools || []).length === 0 ? (
               <div className="col-span-3 text-center py-12 text-gray-500">暂无人才池</div>
             ) : (
-              pools.map((pool) => (
+              (pools || []).map((pool) => (
                 <Card
                   key={pool.id}
                   className={`cursor-pointer transition-all ${

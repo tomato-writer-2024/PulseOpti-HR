@@ -77,8 +77,8 @@ export class TalentPoolManager {
 
   async deletePool(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(talentPool).where(eq(talentPool.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(talentPool).where(eq(talentPool.id, id)).returning();
+    return !!deleted;
   }
 
   async getActivePools(companyId: string): Promise<TalentPool[]> {
@@ -192,19 +192,20 @@ export class TalentPoolManager {
 
   async removeMember(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(talentPoolMembers).where(eq(talentPoolMembers.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(talentPoolMembers).where(eq(talentPoolMembers.id, id)).returning();
+    return !!deleted;
   }
 
   async removeMemberFromPool(poolId: string, relatedId: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db
+    const [deleted] = await db
       .delete(talentPoolMembers)
       .where(and(
         eq(talentPoolMembers.poolId, poolId),
         eq(talentPoolMembers.relatedId, relatedId)
-      ));
-    return (result.rowCount ?? 0) > 0;
+      ))
+      .returning();
+    return !!deleted;
   }
 
   async addMembersToPool(poolId: string, members: Array<{ type: string; relatedId: string; addedBy: string; addedReason?: string }>): Promise<TalentPoolMember[]> {

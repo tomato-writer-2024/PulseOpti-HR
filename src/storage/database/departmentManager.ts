@@ -69,8 +69,8 @@ export class DepartmentManager {
 
   async deleteDepartment(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(departments).where(eq(departments.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(departments).where(eq(departments.id, id)).returning();
+    return !!deleted;
   }
 
   async getCompanyDepartments(companyId: string): Promise<Department[]> {

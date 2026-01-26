@@ -65,7 +65,7 @@ export class GDPRComplianceService {
       id: `dsr-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       type,
       requesterId,
-      requesterEmail: requester.email,
+      requesterEmail: requester.email || '',
       dataSubjectId: subjectId,
       status: 'pending',
       requestedAt: new Date(),
@@ -124,8 +124,8 @@ export class GDPRComplianceService {
     await db
       .update(users)
       .set({
-        deletedAt: new Date(),
-        status: 'deleted',
+        isActive: false,
+        updatedAt: new Date(),
       })
       .where(eq(users.id, request.dataSubjectId));
 
@@ -236,7 +236,7 @@ export class GDPRComplianceService {
         name: users.name,
         email: users.email,
         phone: users.phone,
-        avatar: users.avatar,
+        avatarUrl: users.avatarUrl,
         createdAt: users.createdAt,
       })
       .from(users)
@@ -275,8 +275,8 @@ export class GDPRComplianceService {
 
     const results = await db
       .select()
-      .from(performance)
-      .where(eq(performance.employeeId, employee.id));
+      .from(performanceRecords)
+      .where(eq(performanceRecords.employeeId, employee.id));
 
     return results;
   }
@@ -292,8 +292,8 @@ export class GDPRComplianceService {
 
     const results = await db
       .select()
-      .from(attendance)
-      .where(eq(attendance.employeeId, employee.id));
+      .from(attendanceRecords)
+      .where(eq(attendanceRecords.employeeId, employee.id));
 
     return results;
   }
@@ -309,8 +309,8 @@ export class GDPRComplianceService {
 
     const results = await db
       .select()
-      .from(training)
-      .where(eq(training.employeeId, employee.id));
+      .from(trainingRecords)
+      .where(eq(trainingRecords.employeeId, employee.id));
 
     return results;
   }

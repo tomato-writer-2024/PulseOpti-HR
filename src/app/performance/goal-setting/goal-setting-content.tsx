@@ -110,7 +110,7 @@ export default function GoalSettingContent() {
   }, []);
 
   // 筛选目标
-  const filteredGoals = (goals || []).filter((item: any) => goal => {
+  const filteredGoals = (goals || []).filter((goal: any) => {
     if (selectedType !== 'all' && goal.type !== activeTab.toUpperCase()) {
       return false;
     }
@@ -236,9 +236,9 @@ export default function GoalSettingContent() {
       <div className="grid gap-4 md:grid-cols-4">
         {[
           { label: '总目标数', value: (goals || []).length, icon: Target, color: 'text-blue-600' },
-          { label: '进行中', value: (goals || []).filter((item: any) => g => g.status === '进行中').length, icon: Clock, color: 'text-yellow-600' },
-          { label: '已完成', value: (goals || []).filter((item: any) => g => g.status === '已完成').length, icon: CheckCircle2, color: 'text-green-600' },
-          { label: '已延期', value: (goals || []).filter((item: any) => g => g.status === '已延期').length, icon: MoreHorizontal, color: 'text-red-600' },
+          { label: '进行中', value: (goals || []).filter((g: any) => g.status === '进行中').length, icon: Clock, color: 'text-yellow-600' },
+          { label: '已完成', value: (goals || []).filter((g: any) => g.status === '已完成').length, icon: CheckCircle2, color: 'text-green-600' },
+          { label: '已延期', value: (goals || []).filter((g: any) => g.status === '已延期').length, icon: MoreHorizontal, color: 'text-red-600' },
         ].map((stat, index) => (
           <Card key={index}>
             <CardContent className="pt-6">
@@ -293,9 +293,9 @@ export default function GoalSettingContent() {
         <CardContent className="pt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="kpi">KPI ({(goals || []).filter((item: any) => g => g.type === 'KPI').length})</TabsTrigger>
-              <TabsTrigger value="okr">OKR ({(goals || []).filter((item: any) => g => g.type === 'OKR').length})</TabsTrigger>
-              <TabsTrigger value="mbo">MBO ({(goals || []).filter((item: any) => g => g.type === 'MBO').length})</TabsTrigger>
+              <TabsTrigger value="kpi">KPI ({(goals || []).filter((g: any) => g.type === 'KPI').length})</TabsTrigger>
+              <TabsTrigger value="okr">OKR ({(goals || []).filter((g: any) => g.type === 'OKR').length})</TabsTrigger>
+              <TabsTrigger value="mbo">MBO ({(goals || []).filter((g: any) => g.type === 'MBO').length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-4">
@@ -527,11 +527,11 @@ function getMockGoals(tab: string, type: string, keyword: string): Goal[] {
 
   let filtered = allGoals;
   if (tab !== 'kpi') {
-    filtered = filtered.filter((item: any) => g => g.type.toLowerCase() === tab);
+    filtered = filtered.filter((g: any) => g.type.toLowerCase() === tab);
   }
   if (keyword) {
     const kw = keyword.toLowerCase();
-    filtered = filtered.filter((item: any) => g =>
+    filtered = filtered.filter((g: any) =>
       g.title.toLowerCase().includes(kw) ||
       g.owner.toLowerCase().includes(kw) ||
       g.department.toLowerCase().includes(kw)

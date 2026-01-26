@@ -140,14 +140,14 @@ export class WorkflowHistoryManager {
 
   async deleteHistory(id: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(workflowHistory).where(eq(workflowHistory.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(workflowHistory).where(eq(workflowHistory.id, id)).returning();
+    return !!deleted;
   }
 
   async deleteInstanceHistory(instanceId: string): Promise<boolean> {
     const db = await getDb();
-    const result = await db.delete(workflowHistory).where(eq(workflowHistory.instanceId, instanceId));
-    return (result.rowCount ?? 0) > 0;
+    const [deleted] = await db.delete(workflowHistory).where(eq(workflowHistory.instanceId, instanceId)).returning();
+    return !!deleted;
   }
 
   async searchHistory(

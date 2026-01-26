@@ -114,8 +114,8 @@ export async function updateIndividualDevelopmentPlan(
 
 export async function deleteIndividualDevelopmentPlan(id: string) {
   const db = await getDb();
-  const result = await db.delete(individualDevelopmentPlans).where(eq(individualDevelopmentPlans.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(individualDevelopmentPlans).where(eq(individualDevelopmentPlans.id, id)).returning();
+  return !!deleted;
 }
 
 export async function getEmployeeIDPs(employeeId: string) {

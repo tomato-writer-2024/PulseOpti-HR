@@ -204,7 +204,7 @@ export default function SalaryPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((item: any) => item !== id));
     }
   };
 
@@ -355,7 +355,7 @@ export default function SalaryPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">已发放</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {salaryRecords.filter((item: any) => (r) => r.status === 'paid').length}
+                  {salaryRecords.filter((r: any) => r.status === 'paid').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -368,7 +368,7 @@ export default function SalaryPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">待审批</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {salaryRecords.filter((item: any) => (r) => r.status === 'pending').length}
+                  {salaryRecords.filter((r: any) => r.status === 'pending').length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -381,7 +381,7 @@ export default function SalaryPageContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">已审批</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {salaryRecords.filter((item: any) => (r) => r.status === 'approved').length}
+                  {salaryRecords.filter((r: any) => r.status === 'approved').length}
                 </p>
               </div>
               <FileText className="h-8 w-8 text-blue-600" />

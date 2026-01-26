@@ -127,16 +127,16 @@ export default function ExchangePageContent() {
 
   // 过滤和排序商品
   const filteredItems = useMemo(() => {
-    let items = [...rewardItems];
+    let items = [...(rewardItems || [])];
 
     // 按分类过滤
     if (selectedCategory !== 'all') {
-      items = items.filter((item: any) => item => item.category === selectedCategory);
+      items = items.filter((item: any) => item.category === selectedCategory);
     }
 
     // 按搜索关键词过滤
     if (debouncedKeyword) {
-      items = items.filter((item: any) => item =>
+      items = items.filter((item: any) =>
         item.name.toLowerCase().includes(debouncedKeyword.toLowerCase()) ||
         item.description.toLowerCase().includes(debouncedKeyword.toLowerCase())
       );

@@ -112,12 +112,12 @@ export default function JobPostingContent() {
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: jobPostings.length,
-    active: jobPostings.filter((item: any) => job => job.status === 'active').length,
-    paused: jobPostings.filter((item: any) => job => job.status === 'paused').length,
-    closed: jobPostings.filter((item: any) => job => job.status === 'closed').length,
-    totalApplicants: jobPostings.reduce((sum, job) => sum + job.applicantCount, 0),
-    totalViews: jobPostings.reduce((sum, job) => sum + job.viewCount, 0),
+    total: (jobPostings || []).length,
+    active: (jobPostings || []).filter((job: any) => job.status === 'active').length,
+    paused: (jobPostings || []).filter((job: any) => job.status === 'paused').length,
+    closed: (jobPostings || []).filter((job: any) => job.status === 'closed').length,
+    totalApplicants: (jobPostings || []).reduce((sum, job) => sum + job.applicantCount, 0),
+    totalViews: (jobPostings || []).reduce((sum, job) => sum + job.viewCount, 0),
   }), [jobPostings]);
 
   const getStatusColor = useCallback((status: string) => {
@@ -469,14 +469,14 @@ export default function JobPostingContent() {
                 <Skeleton key={i} className="h-48 w-full" />
               ))}
             </div>
-          ) : jobPostings.length === 0 ? (
+          ) : (jobPostings || []).length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>暂无职位数据</p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {jobPostings.map((job) => (
+              {(jobPostings || []).map((job) => (
                 <Card key={job.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">

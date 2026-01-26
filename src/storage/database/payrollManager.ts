@@ -74,8 +74,8 @@ export async function updateSalaryStructure(
 
 export async function deleteSalaryStructure(id: string) {
   const db = await getDb();
-  const result = await db.delete(salaryStructures).where(eq(salaryStructures.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(salaryStructures).where(eq(salaryStructures.id, id)).returning();
+  return !!deleted;
 }
 
 // ========== 薪资单管理 ==========
@@ -187,8 +187,8 @@ export async function updatePayrollRecord(
 
 export async function deletePayrollRecord(id: string) {
   const db = await getDb();
-  const result = await db.delete(payrollRecords).where(eq(payrollRecords.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(payrollRecords).where(eq(payrollRecords.id, id)).returning();
+  return !!deleted;
 }
 
 export async function getEmployeePayrollRecords(employeeId: string, limit = 12) {
@@ -335,8 +335,8 @@ export async function updateSocialInsuranceRecord(
 
 export async function deleteSocialInsuranceRecord(id: string) {
   const db = await getDb();
-  const result = await db.delete(socialInsuranceRecords).where(eq(socialInsuranceRecords.id, id));
-  return (result.rowCount ?? 0) > 0;
+  const [deleted] = await db.delete(socialInsuranceRecords).where(eq(socialInsuranceRecords.id, id)).returning();
+  return !!deleted;
 }
 
 export async function getEmployeeSocialInsuranceRecords(employeeId: string, limit = 12) {

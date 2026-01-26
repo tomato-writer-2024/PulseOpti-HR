@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/loading';
 import {
@@ -71,7 +72,7 @@ export default function SmartInterviewContent() {
   const [selectedPosition, setSelectedPosition] = useState('');
   const [interviewHistory, setInterviewHistory] = useState<any[]>([]);
 
-  const loadSession = useCallback(async (): Promise<InterviewSession | null> => {
+  const loadSession = useCallback(async (): Promise<InterviewSession> => {
     try {
       const cacheKey = 'interview-session';
       const session = await fetchWithCache<InterviewSession | null>(cacheKey, async () => {
@@ -79,8 +80,12 @@ export default function SmartInterviewContent() {
           '/api/interview/session'
         );
 
-        return response.data || null;
+        return response.data || null as any;
       }, 5 * 60 * 1000);
+
+      if (!session) {
+        throw new Error('No session found');
+      }
 
       return session;
     } catch (err) {
@@ -97,7 +102,7 @@ export default function SmartInterviewContent() {
       );
 
       if (response.success && response.data) {
-        setInterviewHistory(response.data);
+        setInterviewHistory(response.data as any);
       }
     } catch (err) {
       console.error('加载面试历史失败:', err);
