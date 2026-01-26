@@ -4860,3 +4860,73 @@ export const feedback = pgTable(
   })
 );
 
+// ============ 邀请码表 ============
+export const invitationCodes = pgTable(
+  "invitation_codes",
+  {
+    id: varchar("id", { length: 36 })
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    code: varchar("code", { length: 20 }).unique().notNull(), // 邀请码
+    inviterUserId: varchar("inviter_user_id", { length: 36 }).notNull(), // 邀请人用户ID
+    inviterCompanyId: varchar("inviter_company_id", { length: 36 }), // 邀请人企业ID
+    inviteeUserId: varchar("invitee_user_id", { length: 36 }), // 被邀请人用户ID（注册后填入）
+    inviteeCompanyId: varchar("invitee_company_id", { length: 36 }), // 被邀请人企业ID
+    status: varchar("status", { length: 20 })
+      .notNull()
+      .default("pending"), // 状态：pending, used, expired
+    usedAt: timestamp("used_at", { length: 36 }), // 使用时间
+    expiresAt: timestamp("expires_at", { length: 36 }), // 过期时间
+    rewardGiven: boolean("reward_given").notNull().default(false), // 奖励是否已发放
+    rewardGivenAt: timestamp("reward_given_at", { withTimezone: true }), // 奖励发放时间
+    rewardAmount: integer("reward_amount"), // 奖励金额（分）
+    rewardType: varchar("reward_type", { length: 20 }), // 奖励类型：cash, discount, points, days
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }),
+  },
+  (table) => ({
+    codeIdx: index("invitation_codes_code_idx").unique().on(table.code),
+    inviterUserIdIdx: index("invitation_codes_inviter_user_id_idx").on(table.inviterUserId),
+    inviteeUserIdIdx: index("invitation_codes_invitee_user_id_idx").on(table.inviteeUserId),
+    statusIdx: index("invitation_codes_status_idx").on(table.status),
+    expiresAtIdx: index("invitation_codes_expires_at_idx").on(table.expiresAt),
+    createdAtIdx: index("invitation_codes_created_at_idx").on(table.createdAt),
+  })
+);
+
+// ============ 邀请记录表 ============
+export const invitationRecords = pgTable(
+  "invitation_records",
+  {
+    id: varchar("id", { length: 36 })
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    inviterUserId: varchar("inviter_user_id", { length: 36 }).notNull(), // 邀请人用户ID
+    inviterCompanyId: varchar("inviter_company_id", { length: 36 }), // 邀请人企业ID
+    inviteeUserId: varchar("invitee_user_id", { length: 36 }).notNull(), // 被邀请人用户ID
+    inviteeCompanyId: varchar("invitee_company_id", { length: 36 }), // 被邀请人企业ID
+    invitationCode: varchar("invitation_code", { length: 20 }), // 使用的邀请码
+    status: varchar("status", { length: 20 })
+      .notNull()
+      .default("completed"), // 状态：pending, completed, failed
+    rewardStatus: varchar("reward_status", { length: 20 })
+      .notNull()
+      .default("pending"), // 奖励状态：pending, paid, failed
+    rewardAmount: integer("reward_amount"), // 奖励金额（分）
+    rewardPaidAt: timestamp("reward_paid_at", { withTimezone: true }), // 奖励发放时间
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    inviterUserIdIdx: index("invitation_records_inviter_user_id_idx").on(table.inviterUserId),
+    inviteeUserIdIdx: index("invitation_records_invitee_user_id_idx").on(table.inviteeUserId),
+    statusIdx: index("invitation_records_status_idx").on(table.status),
+    createdAtIdx: index("invitation_records_created_at_idx").on(table.createdAt),
+  })
+);
+
