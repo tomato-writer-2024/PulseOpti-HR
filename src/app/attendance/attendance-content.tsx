@@ -204,9 +204,9 @@ export default function AttendanceContent() {
 
       // 计算统计数据
       const totalEmployees = clockInRecords.length || 0;
-      const presentToday = clockInRecords.filter((item: any) => (r) => r.status === '正常').length || 0;
-      const lateCount = clockInRecords.filter((item: any) => (r) => r.status === '迟到').length || 0;
-      const leaveCount = leaveRequests.filter((item: any) => (r) => r.status === '待审批').length || 0;
+      const presentToday = clockInRecords.filter((r: any) => r.status === '正常').length || 0;
+      const lateCount = clockInRecords.filter((r: any) => r.status === '迟到').length || 0;
+      const leaveCount = leaveRequests.filter((r: any) => r.status === '待审批').length || 0;
       const totalOvertimeHours = overtimeRecords.reduce((sum, r) => sum + r.duration, 0);
 
       const calculatedStats: StatItem[] = [

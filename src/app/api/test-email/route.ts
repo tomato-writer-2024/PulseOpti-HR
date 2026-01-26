@@ -20,8 +20,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 检查邮件服务是否已配置
-    if (!emailService.isReady()) {
+    // 检查邮件服务是否已配置（通过检查环境变量）
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpUser = process.env.SMTP_USER;
+
+    if (!smtpHost || !smtpUser) {
       return NextResponse.json(
         {
           success: false,
@@ -65,7 +68,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET() {
   try {
-    const isReady = emailService.isReady();
+    const isReady = !!(process.env.SMTP_HOST && process.env.SMTP_USER);
 
     return NextResponse.json({
       success: true,

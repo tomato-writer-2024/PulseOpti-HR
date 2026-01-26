@@ -117,6 +117,7 @@ export async function PUT(
       grade,
       goals: body.goals || [],
       status: body.status || 'draft',
+      comments: body.comments || '',
       companyId: body.companyId || 'default',
       createdAt: body.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),

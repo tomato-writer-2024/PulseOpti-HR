@@ -35,6 +35,7 @@ const scheduleSchema = z.object({
   endTime: z.string().regex(/^\d{2}:\d{2}$/, '结束时间格式不正确'),
   location: z.string().min(1, '地点不能为空'),
   notes: z.string().optional(),
+  companyId: z.string().optional(),
 });
 
 /**

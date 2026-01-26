@@ -89,7 +89,7 @@ export default function LeaveApprovalPageContent() {
           `/api/attendance/leave/approvals?${params.toString()}`
         );
 
-        return (response.data as LeaveApplication[]) || [];
+        return response.data ? (response.data as unknown as LeaveApplication[]) : [];
       }, 2 * 60 * 1000);
     } catch (err) {
       console.error('加载请假申请失败:', err);
@@ -100,9 +100,9 @@ export default function LeaveApprovalPageContent() {
 
   const loadStats = useCallback((apps: LeaveApplication[]) => {
     setStats({
-      pending: apps.filter((item: any) => a => a.status === 'pending').length,
-      approved: apps.filter((item: any) => a => a.status === 'approved').length,
-      rejected: apps.filter((item: any) => a => a.status === 'rejected').length,
+      pending: apps.filter((a: any) => a.status === 'pending').length,
+      approved: apps.filter((a: any) => a.status === 'approved').length,
+      rejected: apps.filter((a: any) => a.status === 'rejected').length,
       total: apps.length,
     });
   }, []);
@@ -115,7 +115,7 @@ export default function LeaveApprovalPageContent() {
   }, [statusFilter, departmentFilter, fetchApplications, loadApplications, loadStats]);
 
   const filteredApplications = useMemo(() => {
-    return (applications || []).filter((item: any) => app => {
+    return (applications || []).filter((app: any) => {
       const matchesSearch = !debouncedQuery ||
         app.employeeName.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         app.employeeId.toLowerCase().includes(debouncedQuery.toLowerCase());

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { invitationRecords, users } from '@/storage/database/shared/schema';
-import { sql, eq } from 'drizzle-orm';
+import { sql, eq, and } from 'drizzle-orm';
 
 /**
  * GET /api/referrals/leaderboard
@@ -24,8 +24,16 @@ export async function GET(request: NextRequest) {
       startDate.setMonth(startDate.getMonth() - 1);
     }
 
+    // 构建条件
+    const conditions = [eq(invitationRecords.status, 'completed')];
+
+    // 如果有时间限制，添加时间过滤
+    if (startDate) {
+      conditions.push(sql`${invitationRecords.createdAt} >= ${startDate}`);
+    }
+
     // 查询邀请排行榜
-    let query = db
+    const leaderboard = await db
       .select({
         inviterUserId: invitationRecords.inviterUserId,
         userName: users.name,
@@ -35,17 +43,10 @@ export async function GET(request: NextRequest) {
       })
       .from(invitationRecords)
       .innerJoin(users, eq(invitationRecords.inviterUserId, users.id))
-      .where(eq(invitationRecords.status, 'completed'))
+      .where(and(...conditions))
       .groupBy(invitationRecords.inviterUserId, users.name, users.avatarUrl)
       .orderBy(sql`count(*) DESC`)
       .limit(limit);
-
-    // 如果有时间限制，添加时间过滤
-    if (startDate) {
-      query = query.where(sql`${invitationRecords.createdAt} >= ${startDate}`);
-    }
-
-    const leaderboard = await query;
 
     // 格式化排行榜数据
     const formattedLeaderboard = leaderboard.map((item, index) => ({

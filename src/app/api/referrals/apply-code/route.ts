@@ -102,7 +102,9 @@ export async function POST(request: NextRequest) {
       .where(eq(invitationCodes.id, invitationCode.id));
 
     // 给邀请人发放奖励
-    await giveRewardToInviter(invitationCode.inviterUserId, invitationCode.rewardAmount);
+    if (invitationCode.rewardAmount) {
+      await giveRewardToInviter(invitationCode.inviterUserId, invitationCode.rewardAmount);
+    }
 
     // 给被邀请人发放奖励（7天专业版试用）
     await giveTrialToInvitee(user.id, user.companyId);
@@ -111,11 +113,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '邀请码使用成功',
       reward: {
-        inviterReward: {
+        inviterReward: invitationCode.rewardAmount ? {
           amount: invitationCode.rewardAmount / 100,
           type: 'cash',
           description: `邀请成功，获得${invitationCode.rewardAmount / 100}元现金奖励`,
-        },
+        } : null,
         inviteeReward: {
           type: 'trial',
           days: 7,
@@ -176,10 +178,18 @@ async function giveTrialToInvitee(userId: string, companyId: string) {
       .where(eq(subscriptions.id, currentSubscription.id));
   } else {
     // 创建新订阅记录
+    const now = new Date();
     await db.insert(subscriptions).values({
       companyId,
       userId,
       tier: 'professional',
+      amount: 0,
+      currency: 'CNY',
+      period: 'monthly',
+      maxEmployees: 200,
+      maxSubAccounts: 5,
+      startDate: now,
+      endDate: trialEndsAt,
       trialEndsAt,
       hasTrialUsed: true,
       isTrial: true,
@@ -187,7 +197,7 @@ async function giveTrialToInvitee(userId: string, companyId: string) {
       status: 'active',
       autoRenew: false,
       metadata: {
-        trialStartedAt: new Date(),
+        trialStartedAt: now,
         trialDaysTotal: 7,
       },
     });

@@ -60,7 +60,7 @@ export async function PATCH(
     ];
     
     // 过滤字段
-    const updates: Partial<Tenant> = {};
+    const updates: Record<string, any> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         // @ts-ignore

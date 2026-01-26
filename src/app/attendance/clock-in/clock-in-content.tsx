@@ -65,7 +65,7 @@ export default function ClockInPageContent() {
     status: '',
   });
 
-  const [debouncedFilters] = useDebounce(filters, 300);
+  const debouncedFilters = useDebounce(filters, 300);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -105,12 +105,12 @@ export default function ClockInPageContent() {
         );
 
         return response;
-      }).then(result => {
+      }).then((result: any) => {
         if (result.success && result.data) {
-          setRecords(result.data);
+          setRecords(result.data as ClockInRecord[]);
           setPagination((prev) => ({
             ...prev,
-            total: result.total ?? result.data.length,
+            total: result.total ?? result.data?.length ?? 0,
           }));
         }
       });
@@ -130,10 +130,10 @@ export default function ClockInPageContent() {
   const statistics = useMemo(() => {
     return {
       total: pagination.total,
-      normal: records.filter((item: any) => (r) => r.status === 'normal').length,
-      late: records.filter((item: any) => (r) => r.status === 'late').length,
-      earlyLeave: records.filter((item: any) => (r) => r.status === 'early_leave').length,
-      absent: records.filter((item: any) => (r) => r.status === 'absent').length,
+      normal: records.filter((r: any) => r.status === 'normal').length,
+      late: records.filter((r: any) => r.status === 'late').length,
+      earlyLeave: records.filter((r: any) => r.status === 'early_leave').length,
+      absent: records.filter((r: any) => r.status === 'absent').length,
     };
   }, [records, pagination.total]);
 
@@ -149,7 +149,7 @@ export default function ClockInPageContent() {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
     } else {
-      setSelectedIds(selectedIds.filter((item: any) => (selectedId) => selectedId !== id));
+      setSelectedIds(selectedIds.filter((selectedId: string) => selectedId !== id));
     }
   }, [selectedIds]);
 
@@ -164,8 +164,8 @@ export default function ClockInPageContent() {
         { enableMetrics: true }
       );
 
-      if (response.success && response.data?.url) {
-        window.open(response.data.url, '_blank');
+      if (response.success && response.data && 'url' in response.data && (response.data as any).url) {
+        window.open((response.data as any).url, '_blank');
       } else {
         alert('导出失败');
       }

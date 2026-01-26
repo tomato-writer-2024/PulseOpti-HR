@@ -5,7 +5,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { PointsRule } from '../rules-batch/route';
+
+// 积分规则类型定义
+interface PointsRule {
+  id: string;
+  companyId?: string;
+  name: string;
+  description: string;
+  type: 'earn' | 'redeem' | 'deduct';
+  category: 'attendance' | 'performance' | 'training' | 'recommendation' | 'other';
+  points: number;
+  maxPoints?: number;
+  condition: string;
+  isActive: boolean;
+  priority: number;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // 数据验证schema
 const ruleSchema = z.object({

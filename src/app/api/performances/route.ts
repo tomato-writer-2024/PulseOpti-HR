@@ -215,6 +215,7 @@ export async function POST(request: NextRequest) {
       grade,
       goals: body.goals || [],
       status: 'draft',
+      comments: body.comments || '',
       companyId: body.companyId || 'default',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
