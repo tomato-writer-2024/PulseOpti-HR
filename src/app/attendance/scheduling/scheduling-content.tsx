@@ -116,9 +116,9 @@ export default function SchedulingPageContent() {
   const loadStats = useCallback((schedulesList: Schedule[]) => {
     setStats({
       total: schedulesList.length,
-      scheduled: schedulesList.filter((item: any) => s => s.status === 'scheduled').length,
-      checkedIn: schedulesList.filter((item: any) => s => s.status === 'checked_in').length,
-      absent: schedulesList.filter((item: any) => s => s.status === 'absent').length,
+      scheduled: schedulesList.filter((s: any) => s.status === 'scheduled').length,
+      checkedIn: schedulesList.filter((s: any) => s.status === 'checked_in').length,
+      absent: schedulesList.filter((s: any) => s.status === 'absent').length,
     });
   }, []);
 
