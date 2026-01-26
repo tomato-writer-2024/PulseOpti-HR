@@ -109,7 +109,7 @@ export default function LeaveApprovalPageContent() {
 
   useEffect(() => {
     fetchApplications(loadApplications).then((result) => {
-      const apps = (result as LeaveApplication[]) || [];
+      const apps = result ? (result as unknown as LeaveApplication[]) : [];
       loadStats(apps);
     });
   }, [statusFilter, departmentFilter, fetchApplications, loadApplications, loadStats]);

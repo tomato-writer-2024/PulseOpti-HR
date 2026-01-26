@@ -84,7 +84,7 @@ export default function SalaryCalculationContent() {
           `/api/compensation/salary-calculation?${params.toString()}`
         );
 
-        return (response.data as SalaryData[]) || [];
+        return response.data ? (response.data as unknown as SalaryData[]) : [];
       }, 5 * 60 * 1000); // 5分钟缓存
     } catch (error) {
       console.error('获取薪资数据失败:', error);

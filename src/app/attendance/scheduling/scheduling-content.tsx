@@ -104,7 +104,7 @@ export default function SchedulingPageContent() {
           `/api/attendance/scheduling?${params.toString()}`
         );
 
-        return (response.data as Schedule[]) || [];
+        return response.data ? (response.data as unknown as Schedule[]) : [];
       }, 2 * 60 * 1000);
     } catch (err) {
       console.error('加载排班数据失败:', err);
