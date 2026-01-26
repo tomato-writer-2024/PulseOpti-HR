@@ -119,8 +119,8 @@ async function createMockInterview(body: any, user: any) {
   }
 
   // 提取候选人技能
-  const candidateSkills = Array.isArray(candidate.metadata?.skills)
-    ? candidate.metadata.skills
+  const candidateSkills = Array.isArray((candidate.metadata as any)?.skills)
+    ? (candidate.metadata as any).skills
     : [];
 
   // 构建上下文
