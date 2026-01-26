@@ -135,6 +135,7 @@ async function createMockInterview(body: any, user: any) {
       title: job.title,
       description: job.description || '未提供',
       requirements: job.requirements || '未提供',
+      benefits: job.benefits || '未提供',
     },
   };
 

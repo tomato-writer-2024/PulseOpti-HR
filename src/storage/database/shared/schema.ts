@@ -477,6 +477,7 @@ export const subscriptions = pgTable(
       .primaryKey()
       .default(sql`gen_random_uuid()`),
     companyId: varchar("company_id", { length: 36 }).notNull(),
+    userId: varchar("user_id", { length: 36 }), // 订阅用户ID（可选，用于试用和单用户订阅）
     tier: varchar("tier", { length: 20 }).notNull(), // free, basic, professional, enterprise
     amount: integer("amount").notNull(), // 金额（分）
     currency: varchar("currency", { length: 10 }).notNull().default("CNY"),
@@ -491,6 +492,13 @@ export const subscriptions = pgTable(
     paymentMethod: varchar("payment_method", { length: 50 }), // wechat, alipay, bank
     transactionId: varchar("transaction_id", { length: 255 }),
     remark: text("remark"),
+    // 试用相关字段
+    isTrial: boolean("is_trial").notNull().default(false), // 是否试用
+    trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }), // 试用结束时间
+    trialDaysRemaining: integer("trial_days_remaining").notNull().default(0), // 试用剩余天数
+    hasTrialUsed: boolean("has_trial_used").notNull().default(false), // 是否已使用过试用
+    autoRenew: boolean("auto_renew").notNull().default(false), // 是否自动续费
+    metadata: jsonb("metadata"), // 其他元数据（试用开始时间、总试用天数等）
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -498,6 +506,7 @@ export const subscriptions = pgTable(
   },
   (table) => ({
     companyIdIdx: index("subscriptions_company_id_idx").on(table.companyId),
+    userIdIdx: index("subscriptions_user_id_idx").on(table.userId),
     statusIdx: index("subscriptions_status_idx").on(table.status),
   })
 );

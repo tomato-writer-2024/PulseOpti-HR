@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 提取候选人技能
-    const candidateSkills = Array.isArray(candidate.metadata?.skills)
-      ? candidate.metadata.skills
+    const candidateSkills = Array.isArray((candidate.metadata as any)?.skills)
+      ? (candidate.metadata as any).skills
       : [];
 
     // 构建上下文
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
         title: job.title,
         description: job.description || '未提供',
         requirements: job.requirements || '未提供',
+        benefits: job.benefits || '未提供',
       },
     };
 
