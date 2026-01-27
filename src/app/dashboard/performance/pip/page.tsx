@@ -54,7 +54,7 @@ import {
   Target,
   User,
   Building2,
-  Warning,
+  AlertTriangle,
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -637,7 +637,7 @@ export default function PIPManagementPage() {
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-orange-100 rounded-lg">
-                        <Warning className="h-5 w-5 text-orange-600" />
+                        <AlertTriangle className="h-5 w-5 text-orange-600" />
                       </div>
                       <CardTitle className="text-lg">行为问题</CardTitle>
                     </div>
