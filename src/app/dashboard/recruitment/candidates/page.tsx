@@ -525,7 +525,7 @@ export default function RecruitmentManagement() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="状态" />
                     </SelectTrigger>
@@ -985,7 +985,7 @@ export default function RecruitmentManagement() {
                               <div>
                                 <p className="font-medium">{interview.type}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  面试官: {interviewer}
+                                  面试官: {interview.interviewer}
                                 </p>
                               </div>
                               <div className="text-right">

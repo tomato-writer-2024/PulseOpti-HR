@@ -394,7 +394,7 @@ export default function SalaryCalculation() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>

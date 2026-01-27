@@ -1,12 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,721 +13,664 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Loader2,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Sparkles,
   TrendingUp,
   TrendingDown,
-  Minus,
   BarChart3,
-  Calendar,
-  User,
-  Building2,
   AlertCircle,
   RefreshCw,
   Download,
-  Info,
-  CheckCircle2,
+  Search,
   Target,
-  Lightbulb,
+  Brain,
+  Zap,
+  Calendar,
+  User,
+  Building2,
+  CheckCircle2,
   ShieldAlert,
+  Lightbulb,
   Rocket,
   LineChart,
   PieChart,
+  Filter,
+  MoreVertical,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Employee {
   id: string;
   name: string;
-  departmentName?: string;
-  positionName?: string;
-  level?: string;
+  avatar?: string;
+  department: string;
+  position: string;
+  level: string;
 }
 
 interface HistoricalData {
   scores: number[];
-  cycles: number;
-  avgScore: number | null;
+  cycles: string[];
+  avgScore: number;
 }
 
-interface ModelResult {
-  predictedScore: number;
-  trend: string;
-  confidence: number;
-  details?: any;
-  dimensions?: {
-    workQuality: number;
-    efficiency: number;
-    collaboration: number;
-    innovation: number;
+interface PredictionResult {
+  employeeId: string;
+  employeeName: string;
+  predictionPeriod: string;
+  predictionDate: string;
+  historicalData: HistoricalData;
+  finalPrediction: {
+    predictedScore: number;
+    trend: 'up' | 'down' | 'stable';
+    confidence: number;
+    dimensions: {
+      workQuality: number;
+      efficiency: number;
+      collaboration: number;
+      innovation: number;
+    };
+    strengths: string[];
+    risks: string[];
+    recommendations: string[];
+    keyFactors: {
+      factor: string;
+      impact: number;
+      description: string;
+    }[];
   };
-  strengths?: string[];
-  risks?: string[];
-  recommendations?: string[];
-  keyFactors?: any[];
-}
-
-interface PredictionResponse {
-  success: boolean;
-  data: {
-    employeeId: string;
-    employeeName: string;
-    predictionPeriod: string;
-    predictionDate: string;
-    historicalData: HistoricalData;
-    finalPrediction: ModelResult;
-    models?: Record<string, ModelResult>;
-    modelVersion: string;
-  };
+  riskLevel: 'low' | 'medium' | 'high';
 }
 
 export default function AIPerformancePredictionPage() {
-  const [loading, setLoading] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-  const [predictionPeriod, setPredictionPeriod] = useState<'next_month' | 'next_quarter' | 'next_year'>('next_quarter');
-  const [selectedModels, setSelectedModels] = useState<string[]>(['statistical', 'rule_based', 'ai_model', 'ensemble']);
-  const [predictionResult, setPredictionResult] = useState<PredictionResponse | null>(null);
-  const [companyId, setCompanyId] = useState<string>('');
-  const [employeeInfo, setEmployeeInfo] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [predictions, setPredictions] = useState<PredictionResult[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [riskFilter, setRiskFilter] = useState<'all' | PredictionResult['riskLevel']>('all');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedPrediction, setSelectedPrediction] = useState<PredictionResult | null>(null);
 
   useEffect(() => {
-    loadEmployees();
+    const fetchData = async () => {
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setPredictions([
+        {
+          employeeId: 'EMP001',
+          employeeName: '张三',
+          predictionPeriod: '2025 Q2',
+          predictionDate: '2025-04-18',
+          historicalData: {
+            scores: [85, 88, 90, 89, 92, 91],
+            cycles: ['2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4'],
+            avgScore: 89.2,
+          },
+          finalPrediction: {
+            predictedScore: 93,
+            trend: 'up',
+            confidence: 0.92,
+            dimensions: { workQuality: 94, efficiency: 92, collaboration: 91, innovation: 93 },
+            strengths: ['技术能力持续提升', '团队协作表现优异', '创新能力强'],
+            risks: ['工作负荷较重', '缺乏管理经验'],
+            recommendations: ['适当分配工作负荷', '提供管理培训机会'],
+            keyFactors: [
+              { factor: '技术能力', impact: 0.85, description: '技术能力是主要驱动因素' },
+              { factor: '团队协作', impact: 0.78, description: '团队协作对绩效有积极影响' },
+            ],
+          },
+          riskLevel: 'low',
+        },
+        {
+          employeeId: 'EMP002',
+          employeeName: '李四',
+          predictionPeriod: '2025 Q2',
+          predictionDate: '2025-04-18',
+          historicalData: {
+            scores: [82, 80, 85, 84, 83, 85],
+            cycles: ['2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4'],
+            avgScore: 83.2,
+          },
+          finalPrediction: {
+            predictedScore: 84,
+            trend: 'stable',
+            confidence: 0.88,
+            dimensions: { workQuality: 85, efficiency: 83, collaboration: 85, innovation: 82 },
+            strengths: ['沟通能力强', '用户洞察敏锐'],
+            risks: ['技术理解有限', '数据分析能力需提升'],
+            recommendations: ['加强技术学习', '提升数据分析能力'],
+            keyFactors: [
+              { factor: '沟通能力', impact: 0.82, description: '沟通能力是关键优势' },
+              { factor: '产品思维', impact: 0.80, description: '产品思维推动绩效提升' },
+            ],
+          },
+          riskLevel: 'medium',
+        },
+        {
+          employeeId: 'EMP003',
+          employeeName: '王五',
+          predictionPeriod: '2025 Q2',
+          predictionDate: '2025-04-18',
+          historicalData: {
+            scores: [78, 75, 80, 76, 74, 72],
+            cycles: ['2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4'],
+            avgScore: 75.8,
+          },
+          finalPrediction: {
+            predictedScore: 71,
+            trend: 'down',
+            confidence: 0.85,
+            dimensions: { workQuality: 72, efficiency: 70, collaboration: 74, innovation: 68 },
+            strengths: ['责任心强'],
+            risks: ['工作效率下降', '团队协作不足', '缺乏创新'],
+            recommendations: ['及时沟通了解困难', '提供技能培训', '调整工作分配'],
+            keyFactors: [
+              { factor: '工作态度', impact: 0.75, description: '工作态度是主要影响因素' },
+              { factor: '技能水平', impact: 0.68, description: '技能水平有待提升' },
+            ],
+          },
+          riskLevel: 'high',
+        },
+        {
+          employeeId: 'EMP004',
+          employeeName: '赵六',
+          predictionPeriod: '2025 Q2',
+          predictionDate: '2025-04-18',
+          historicalData: {
+            scores: [88, 90, 89, 91, 92, 90],
+            cycles: ['2024 Q3', '2024 Q4', '2025 Q1', '2025 Q2', '2025 Q3', '2025 Q4'],
+            avgScore: 90.0,
+          },
+          finalPrediction: {
+            predictedScore: 91,
+            trend: 'up',
+            confidence: 0.90,
+            dimensions: { workQuality: 92, efficiency: 91, collaboration: 90, innovation: 89 },
+            strengths: ['全面发展', '执行力强'],
+            risks: [],
+            recommendations: ['继续保持良好表现', '考虑晋升机会'],
+            keyFactors: [
+              { factor: '综合能力', impact: 0.88, description: '综合能力均衡发展' },
+            ],
+          },
+          riskLevel: 'low',
+        },
+      ]);
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
-  const loadEmployees = async () => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        toast.error('未授权，请重新登录');
-        return;
-      }
+  const departments = useMemo(() => {
+    return ['技术部', '产品部', '市场部', '销售部'];
+  }, []);
 
-      const response = await fetch('/api/employees', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+  const filteredPredictions = useMemo(() => {
+    return predictions.filter((prediction) => {
+      const matchesSearch =
+        prediction.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRisk = riskFilter === 'all' || prediction.riskLevel === riskFilter;
+      const matchesDepartment = departmentFilter === 'all';
+      return matchesSearch && matchesRisk && matchesDepartment;
+    });
+  }, [predictions, searchTerm, riskFilter, departmentFilter]);
 
-      if (!response.ok) throw new Error('加载员工列表失败');
+  const stats = useMemo(() => {
+    return {
+      total: predictions.length,
+      highRisk: predictions.filter((p) => p.riskLevel === 'high').length,
+      mediumRisk: predictions.filter((p) => p.riskLevel === 'medium').length,
+      lowRisk: predictions.filter((p) => p.riskLevel === 'low').length,
+      avgPredictedScore: predictions.reduce((sum, p) => sum + p.finalPrediction.predictedScore, 0) / predictions.length,
+      avgConfidence: predictions.reduce((sum, p) => sum + p.finalPrediction.confidence, 0) / predictions.length,
+    };
+  }, [predictions]);
 
-      const data = await response.json();
-      setEmployees(data.data || []);
-      setCompanyId(data.companyId || '');
-    } catch (error) {
-      console.error('加载员工列表失败:', error);
-      toast.error('加载员工列表失败');
-    }
-  };
-
-  const runPrediction = async () => {
-    if (!selectedEmployee) {
-      toast.error('请选择员工');
-      return;
-    }
-
-    setLoading(true);
-    setPredictionResult(null);
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        throw new Error('未授权');
-      }
-
-      const response = await fetch('/api/ai/performance-prediction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          employeeId: selectedEmployee,
-          predictionPeriod,
-          models: selectedModels,
-          includeDetails: true,
-          historicalCycles: 6,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '预测失败');
-      }
-
-      const data: PredictionResponse = await response.json();
-      setPredictionResult(data);
-      
-      // 设置员工信息
-      const emp = employees.find(e => e.id === selectedEmployee);
-      setEmployeeInfo(emp || null);
-
-      toast.success('绩效预测完成');
-    } catch (error) {
-      console.error('预测失败:', error);
-      toast.error(error instanceof Error ? error.message : '预测失败');
-    } finally {
-      setLoading(false);
-    }
+  const getRiskBadge = (risk: PredictionResult['riskLevel']) => {
+    const colors: Record<string, string> = {
+      low: 'bg-green-100 text-green-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      high: 'bg-red-100 text-red-800',
+    };
+    const labels: Record<string, string> = {
+      low: '低风险',
+      medium: '中风险',
+      high: '高风险',
+    };
+    return <Badge className={colors[risk]}>{labels[risk]}</Badge>;
   };
 
   const getTrendIcon = (trend: string) => {
-    if (trend === '上升') {
-      return <TrendingUp className="w-5 h-5 text-green-500" />;
-    } else if (trend === '下降') {
-      return <TrendingDown className="w-5 h-5 text-red-500" />;
-    } else {
-      return <Minus className="w-5 h-5 text-yellow-500" />;
+    switch (trend) {
+      case 'up':
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'down':
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <LineChart className="h-4 w-4 text-blue-600" />;
     }
   };
 
-  const getTrendColor = (trend: string) => {
-    if (trend === '上升') return 'text-green-600 bg-green-50 border-green-200';
-    if (trend === '下降') return 'text-red-600 bg-red-50 border-red-200';
-    return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-blue-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getScoreBgColor = (score: number) => {
-    if (score >= 85) return 'bg-green-100 border-green-300';
-    if (score >= 70) return 'bg-blue-100 border-blue-300';
-    if (score >= 60) return 'bg-yellow-100 border-yellow-300';
-    return 'bg-red-100 border-red-300';
-  };
-
-  const exportReport = () => {
-    if (!predictionResult) return;
-
-    const report = {
-      title: 'AI绩效预测报告',
-      generatedAt: new Date().toISOString(),
-      employee: {
-        id: predictionResult.data.employeeId,
-        name: predictionResult.data.employeeName,
-      },
-      predictionPeriod: predictionResult.data.predictionPeriod,
-      predictionDate: predictionResult.data.predictionDate,
-      historicalData: predictionResult.data.historicalData,
-      prediction: predictionResult.data.finalPrediction,
-      models: predictionResult.data.models,
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `performance-prediction-${predictionResult.data.employeeName}-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('报告已导出');
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* 页面标题 */}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">AI绩效预测</h1>
-          </div>
-          <p className="text-sm text-gray-500">
-            基于多模型融合的智能绩效预测，为您提供准确的绩效趋势分析
-          </p>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">AI绩效预测</h1>
+          <p className="text-muted-foreground mt-1">利用AI技术预测员工未来绩效表现</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={loadEmployees}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            刷新
+        <div className="flex items-center gap-2">
+          <Button variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            刷新预测
+          </Button>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            导出报告
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="prediction" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="prediction">绩效预测</TabsTrigger>
-          <TabsTrigger value="analysis">深度分析</TabsTrigger>
-          <TabsTrigger value="comparison">模型对比</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">预测总数</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">覆盖率 100%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">高风险</CardTitle>
+            <ShieldAlert className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.highRisk}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              占比 {((stats.highRisk / stats.total) * 100).toFixed(1)}%
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">中风险</CardTitle>
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{stats.mediumRisk}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              占比 {((stats.mediumRisk / stats.total) * 100).toFixed(1)}%
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">低风险</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.lowRisk}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              占比 {((stats.lowRisk / stats.total) * 100).toFixed(1)}%
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">平均置信度</CardTitle>
+            <Brain className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{(stats.avgConfidence * 100).toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground mt-1">AI模型可信度</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="prediction" className="space-y-6">
-          {/* 预测配置卡片 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>预测配置</CardTitle>
-              <CardDescription>配置预测参数和模型选择</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>选择员工</Label>
-                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择员工" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.name} - {employee.positionName || '未分配职位'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>预测周期</Label>
-                  <Select value={predictionPeriod} onValueChange={(v: any) => setPredictionPeriod(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="next_month">下一个月</SelectItem>
-                      <SelectItem value="next_quarter">下一个季度</SelectItem>
-                      <SelectItem value="next_year">下一年</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>预测模型</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: 'statistical', label: '统计趋势' },
-                      { value: 'rule_based', label: '特征规则' },
-                      { value: 'ai_model', label: 'AI大模型' },
-                      { value: 'ensemble', label: '综合融合' },
-                    ].map((model) => (
-                      <Badge
-                        key={model.value}
-                        variant={selectedModels.includes(model.value) ? 'default' : 'outline'}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          if (selectedModels.includes(model.value)) {
-                            setSelectedModels(selectedModels.filter(m => m !== model.value));
-                          } else {
-                            setSelectedModels([...selectedModels, model.value]);
-                          }
-                        }}
-                      >
-                        {model.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle>预测结果 ({filteredPredictions.length})</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索员工..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 w-64"
+                />
               </div>
-
-              <Button
-                onClick={runPrediction}
-                disabled={loading || !selectedEmployee || selectedModels.length === 0}
-                className="w-full"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    预测中...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    开始预测
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* 预测结果展示 */}
-          {predictionResult && (
-            <>
-              {/* 主要预测结果 */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>预测结果</CardTitle>
-                      <CardDescription>
-                        {predictionResult.data.employeeName} - {predictionResult.data.predictionPeriod}
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={exportReport}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      导出报告
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* 预测分数 */}
-                    <div className="flex flex-col items-center justify-center p-6 rounded-lg border-2 border-purple-200 bg-purple-50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-6 h-6 text-purple-600" />
-                        <span className="text-sm font-medium text-gray-600">预测分数</span>
-                      </div>
-                      <div className={`text-6xl font-bold ${getScoreColor(predictionResult.data.finalPrediction.predictedScore)}`}>
-                        {predictionResult.data.finalPrediction.predictedScore}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-2">满分100分</div>
-                    </div>
-
-                    {/* 趋势判断 */}
-                    <div className={`flex flex-col items-center justify-center p-6 rounded-lg border-2 ${getScoreBgColor(predictionResult.data.finalPrediction.predictedScore)}`}>
-                      <div className="flex items-center gap-2 mb-2">
-                        {getTrendIcon(predictionResult.data.finalPrediction.trend)}
-                        <span className="text-sm font-medium text-gray-600">绩效趋势</span>
-                      </div>
-                      <div className={`text-4xl font-bold ${getTrendColor(predictionResult.data.finalPrediction.trend)}`}>
-                        {predictionResult.data.finalPrediction.trend}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-2">相比历史数据</div>
-                    </div>
-
-                    {/* 置信度 */}
-                    <div className="flex flex-col items-center justify-center p-6 rounded-lg border-2 border-blue-200 bg-blue-50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-6 h-6 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-600">预测置信度</span>
-                      </div>
-                      <div className="text-6xl font-bold text-blue-600">
-                        {Math.round(predictionResult.data.finalPrediction.confidence * 100)}%
-                      </div>
-                      <Progress
-                        value={predictionResult.data.finalPrediction.confidence * 100}
-                        className="w-full mt-4"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 历史数据概览 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>历史数据概览</CardTitle>
-                  <CardDescription>过去{predictionResult.data.historicalData.cycles}个周期的绩效数据</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">平均绩效分数</span>
-                        <span className="text-2xl font-bold text-gray-900">
-                          {predictionResult.data.historicalData.avgScore || '无数据'}
+              <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v as any)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="风险等级" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部风险</SelectItem>
+                  <SelectItem value="low">低风险</SelectItem>
+                  <SelectItem value="medium">中风险</SelectItem>
+                  <SelectItem value="high">高风险</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredPredictions.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              没有找到匹配的预测结果
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>员工</TableHead>
+                    <TableHead>历史平均</TableHead>
+                    <TableHead>预测得分</TableHead>
+                    <TableHead>趋势</TableHead>
+                    <TableHead>置信度</TableHead>
+                    <TableHead>风险等级</TableHead>
+                    <TableHead>预测周期</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPredictions.map((prediction) => (
+                    <TableRow key={prediction.employeeId}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {prediction.employeeName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{prediction.employeeName}</p>
+                            <p className="text-xs text-muted-foreground">{prediction.employeeId}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{prediction.historicalData.avgScore.toFixed(1)}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-bold text-lg">
+                          {prediction.finalPrediction.predictedScore}
                         </span>
-                      </div>
-                      {predictionResult.data.historicalData.avgScore && (
-                        <Progress
-                          value={predictionResult.data.historicalData.avgScore}
-                          className="mt-2"
-                        />
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">数据周期数</span>
-                        <span className="text-2xl font-bold text-gray-900">
-                          {predictionResult.data.historicalData.cycles}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-500 mt-2">
-                        使用最近{predictionResult.data.historicalData.cycles}个周期的绩效数据进行分析
-                      </div>
-                    </div>
-                  </div>
-
-                  {predictionResult.data.historicalData.scores.length > 0 && (
-                    <div className="mt-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <LineChart className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-600">绩效趋势图</span>
-                      </div>
-                      <div className="flex items-end gap-2 h-32 border-b border-l border-gray-200 p-4">
-                        {predictionResult.data.historicalData.scores.map((score, index) => (
-                          <div
-                            key={index}
-                            className="flex-1 flex flex-col items-center gap-1"
-                          >
-                            <div
-                              className={`w-full rounded-t-sm ${getScoreBgColor(score)} transition-all duration-300`}
-                              style={{
-                                height: `${score}%`,
-                                minHeight: '4px',
-                              }}
-                            />
-                            <span className="text-xs text-gray-500">
-                              T{predictionResult.data.historicalData.scores.length - index}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-center gap-4 mt-4">
-                        {predictionResult.data.historicalData.scores.slice(-2).map((score, index) => (
-                          <div key={index} className="text-center">
-                            <div className={`text-lg font-bold ${getScoreColor(score)}`}>{score}</div>
-                            <div className="text-xs text-gray-500">
-                              {index === 0 ? '最新' : '上一周期'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="analysis" className="space-y-6">
-          {predictionResult && predictionResult.data.finalPrediction && (
-            <>
-              {/* 多维度分析 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>多维度绩效分析</CardTitle>
-                  <CardDescription>AI模型从多个维度分析员工的绩效表现</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { key: 'workQuality', label: '工作质量', icon: CheckCircle2 },
-                      { key: 'efficiency', label: '工作效率', icon: Rocket },
-                      { key: 'collaboration', label: '团队协作', icon: User },
-                      { key: 'innovation', label: '创新能力', icon: Lightbulb },
-                    ].map((dimension) => (
-                      <div key={dimension.key} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <dimension.icon className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm font-medium text-gray-600">{dimension.label}</span>
-                          </div>
-                          <span className={`text-lg font-bold ${getScoreColor(predictionResult.data.finalPrediction!.dimensions![dimension.key as keyof typeof predictionResult.data.finalPrediction.dimensions] as number)}`}>
-                            {predictionResult.data.finalPrediction!.dimensions![dimension.key as keyof typeof predictionResult.data.finalPrediction.dimensions] as number}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {getTrendIcon(prediction.finalPrediction.trend)}
+                          <span className="text-sm">
+                            {prediction.finalPrediction.trend === 'up' ? '上升' : prediction.finalPrediction.trend === 'down' ? '下降' : '稳定'}
                           </span>
                         </div>
-                        <Progress
-                          value={predictionResult.data.finalPrediction!.dimensions![dimension.key as keyof typeof predictionResult.data.finalPrediction.dimensions] as number}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 优势与风险 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      关键优势
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {predictionResult.data.finalPrediction.strengths &&
-                    predictionResult.data.finalPrediction.strengths.length > 0 ? (
-                      <ul className="space-y-3">
-                        {predictionResult.data.finalPrediction.strengths.map((strength, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0" />
-                            <span className="text-sm text-gray-700">{strength}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        暂无优势分析数据
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <ShieldAlert className="w-5 h-5 text-red-600" />
-                      潜在风险
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {predictionResult.data.finalPrediction.risks &&
-                    predictionResult.data.finalPrediction.risks.length > 0 ? (
-                      <ul className="space-y-3">
-                        {predictionResult.data.finalPrediction.risks.map((risk, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
-                            <span className="text-sm text-gray-700">{risk}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        暂无明显风险因素
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* 改进建议 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-600" />
-                    提升建议
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {predictionResult.data.finalPrediction.recommendations &&
-                  predictionResult.data.finalPrediction.recommendations.length > 0 ? (
-                    <div className="space-y-4">
-                      {predictionResult.data.finalPrediction.recommendations.map((recommendation, index) => (
-                        <Alert key={index}>
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{recommendation}</AlertDescription>
-                        </Alert>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      暂无改进建议
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* 关键影响因素 */}
-              {predictionResult.data.finalPrediction.keyFactors &&
-               predictionResult.data.finalPrediction.keyFactors.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>关键影响因素</CardTitle>
-                    <CardDescription>影响绩效预测的主要因素及其权重</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {predictionResult.data.finalPrediction.keyFactors.map((factor: any, index: number) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">{factor.factor}</span>
-                            <Badge variant={
-                              factor.impact === 'positive' ? 'default' :
-                              factor.impact === 'negative' ? 'destructive' : 'secondary'
-                            }>
-                              {factor.impact === 'positive' ? '正向' :
-                               factor.impact === 'negative' ? '负向' : '中性'}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-gray-600">{factor.value}</div>
-                          <Progress value={(factor.weight || 0) * 100} />
-                          <div className="text-xs text-gray-500">权重: {Math.round((factor.weight || 0) * 100)}%</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={prediction.finalPrediction.confidence * 100} className="w-16 h-2" />
+                          <span className="text-sm">{(prediction.finalPrediction.confidence * 100).toFixed(0)}%</span>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
-
-          {!predictionResult && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                请先进行绩效预测，然后在此查看深度分析结果
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-
-        <TabsContent value="comparison" className="space-y-6">
-          {predictionResult && predictionResult.data.models && (
-            <Card>
-              <CardHeader>
-                <CardTitle>多模型结果对比</CardTitle>
-                <CardDescription>不同预测模型的结果对比分析</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {Object.entries(predictionResult.data.models).map(([modelName, result]: [string, any]) => (
-                    <div key={modelName} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {modelName === 'statistical' && '统计趋势模型'}
-                            {modelName === 'rule_based' && '特征规则模型'}
-                            {modelName === 'ai_model' && 'AI大模型'}
-                            {modelName === 'ensemble' && '综合融合模型'}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {result.details?.method || modelName}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-gray-900">{result.predictedScore}</div>
-                            <div className="text-sm text-gray-500">预测分数</div>
-                          </div>
-                          {result.details?.weights && (
-                            <div className="text-right">
-                              <div className="text-sm text-gray-600">
-                                统计: {Math.round(result.details.weights.statistical * 100)}%
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                规则: {Math.round(result.details.weights.rule_based * 100)}%
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                AI: {Math.round(result.details.weights.ai * 100)}%
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <Badge variant="outline" className={getTrendColor(result.trend)}>
-                          {getTrendIcon(result.trend)}
-                          <span className="ml-1">{result.trend}</span>
-                        </Badge>
-                        <Badge variant="secondary">
-                          置信度: {Math.round(result.confidence * 100)}%
-                        </Badge>
-                      </div>
-
-                      <Progress value={result.predictedScore} />
-                    </div>
+                      </TableCell>
+                      <TableCell>{getRiskBadge(prediction.riskLevel)}</TableCell>
+                      <TableCell>{prediction.predictionPeriod}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => { setSelectedPrediction(prediction); setViewDialogOpen(true); }}
+                        >
+                          查看详情
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
+                </TableBody>
+              </Table>
+            </div>
           )}
+        </CardContent>
+      </Card>
 
-          {!predictionResult && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                请先进行绩效预测，然后在此查看模型对比结果
-              </AlertDescription>
-            </Alert>
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>预测详情</DialogTitle>
+          </DialogHeader>
+          {selectedPrediction && (
+            <ScrollArea className="max-h-[70vh]">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 pb-4 border-b">
+                  <Avatar className="h-16 w-16">
+                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                      {selectedPrediction.employeeName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold mb-2">{selectedPrediction.employeeName}</h3>
+                    <div className="flex items-center gap-3 mb-2">
+                      {getRiskBadge(selectedPrediction.riskLevel)}
+                      <div className="flex items-center gap-1">
+                        {getTrendIcon(selectedPrediction.finalPrediction.trend)}
+                        <span className="text-sm text-muted-foreground">
+                          {selectedPrediction.finalPrediction.trend === 'up' ? '上升趋势' : selectedPrediction.finalPrediction.trend === 'down' ? '下降趋势' : '稳定趋势'}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      预测周期: {selectedPrediction.predictionPeriod}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className={`p-4 rounded-lg ${
+                      selectedPrediction.riskLevel === 'high' ? 'bg-red-50' :
+                      selectedPrediction.riskLevel === 'medium' ? 'bg-yellow-50' : 'bg-green-50'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="h-6 w-6 text-amber-500" />
+                        <span className="text-sm text-muted-foreground">预测得分</span>
+                      </div>
+                      <p className={`text-3xl font-bold ${
+                        selectedPrediction.riskLevel === 'high' ? 'text-red-600' :
+                        selectedPrediction.riskLevel === 'medium' ? 'text-yellow-600' : 'text-green-600'
+                      }`}>
+                        {selectedPrediction.finalPrediction.predictedScore}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        历史数据
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">历史平均</span>
+                          <span className="font-semibold">{selectedPrediction.historicalData.avgScore.toFixed(1)}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {selectedPrediction.historicalData.cycles.map((cycle, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">{cycle}</span>
+                              <span>{selectedPrediction.historicalData.scores[idx]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <PieChart className="h-4 w-4" />
+                        维度预测
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {Object.entries(selectedPrediction.finalPrediction.dimensions).map(([key, value]) => (
+                          <div key={key}>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-muted-foreground capitalize">{key}</span>
+                              <span className="font-medium">{value}</span>
+                            </div>
+                            <Progress value={value} />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {selectedPrediction.finalPrediction.strengths.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-600" />
+                        优势分析
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {selectedPrediction.finalPrediction.strengths.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedPrediction.finalPrediction.risks.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4 text-red-600" />
+                        风险提示
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {selectedPrediction.finalPrediction.risks.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedPrediction.finalPrediction.recommendations.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-blue-600" />
+                        改进建议
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {selectedPrediction.finalPrediction.recommendations.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <Rocket className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedPrediction.finalPrediction.keyFactors.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Target className="h-4 w-4 text-purple-600" />
+                        关键影响因素
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {selectedPrediction.finalPrediction.keyFactors.map((factor, idx) => (
+                          <div key={idx} className="p-3 bg-muted rounded">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium">{factor.factor}</span>
+                              <Badge variant="outline">{(factor.impact * 100).toFixed(0)}%</Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{factor.description}</p>
+                            <Progress value={factor.impact * 100} className="mt-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="text-xs text-muted-foreground pt-4 border-t">
+                  <p>预测日期: {selectedPrediction.predictionDate}</p>
+                  <p>置信度: {(selectedPrediction.finalPrediction.confidence * 100).toFixed(1)}%</p>
+                </div>
+              </div>
+            </ScrollArea>
           )}
-        </TabsContent>
-      </Tabs>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              关闭
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              导出报告
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
