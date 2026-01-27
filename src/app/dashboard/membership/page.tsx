@@ -1,44 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Crown,
-  Shield,
-  Building2,
-  Users,
-  Check,
-  X,
-  Plus,
-  Trash2,
-  Edit,
-  MoreVertical,
-  Key,
-  RefreshCw,
-  AlertCircle
-} from 'lucide-react';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -46,609 +12,390 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
+  Crown,
+  CheckCircle,
+  X,
+  Star,
+  TrendingUp,
+  Shield,
+  Zap,
+  Gift,
+  Clock,
+  Users,
+  ArrowRight,
+  Check,
+  Calendar,
+  DollarSign,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-// 会员套餐类型
-type MembershipPlan = 'free' | 'basic' | 'professional' | 'enterprise';
+type Plan = 'free' | 'basic' | 'professional' | 'enterprise';
+type BillingCycle = 'monthly' | 'yearly';
 
-// 子账号角色
-type SubAccountRole = 'admin' | 'hr' | 'manager' | 'viewer';
-
-// 会员套餐配置
-interface MembershipConfig {
-  id: MembershipPlan;
+interface PlanFeature {
   name: string;
-  description: string;
+  included: boolean;
+  description?: string;
+}
+
+interface PricingPlan {
+  id: Plan;
+  name: string;
   price: number;
-  duration: 'month' | 'year';
-  maxUsers: number;
-  maxSubAccounts: number;
-  features: string[];
-  color: string;
-  icon: React.ReactNode;
+  yearlyPrice: number;
+  description: string;
+  features: PlanFeature[];
+  popular?: boolean;
+  badge?: string;
 }
 
-// 子账号信息
-interface SubAccount {
-  id: string;
-  name: string;
-  email: string;
-  role: SubAccountRole;
-  status: 'active' | 'inactive' | 'suspended';
-  lastLogin: string;
-  createdAt: string;
-  department?: string;
-}
+export default function MembershipPage() {
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<Plan>('free');
 
-// 使用情况统计
-interface UsageStats {
-  currentUsers: number;
-  currentSubAccounts: number;
-  storageUsed: number;
-  storageLimit: number;
-  apiCallsUsed: number;
-  apiCallsLimit: number;
-}
-
-const MembershipPage: React.FC = () => {
-  const [currentPlan, setCurrentPlan] = useState<MembershipPlan>('basic');
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
-  const [subAccounts, setSubAccounts] = useState<SubAccount[]>([]);
-  const [showAddSubAccount, setShowAddSubAccount] = useState(false);
-  const [newSubAccount, setNewSubAccount] = useState({
-    name: '',
-    email: '',
-    role: 'viewer' as SubAccountRole,
-    department: ''
-  });
-  const [usageStats, setUsageStats] = useState<UsageStats>({
-    currentUsers: 8,
-    currentSubAccounts: 3,
-    storageUsed: 45,
-    storageLimit: 100,
-    apiCallsUsed: 7500,
-    apiCallsLimit: 10000
-  });
-
-  // 会员套餐配置（价格单位：元，年付）
-  const membershipPlans: MembershipConfig[] = [
+  const pricingPlans: PricingPlan[] = [
     {
       id: 'free',
       name: '免费版',
-      description: '适合初创团队体验',
       price: 0,
-      duration: 'month',
-      maxUsers: 5,
-      maxSubAccounts: 0,
+      yearlyPrice: 0,
+      description: '适合初创团队和小企业试用',
       features: [
-        '基础人事管理',
-        '考勤打卡',
-        '0个子账号',
-        '5GB存储空间',
-        '基础报表',
-        '社区支持'
+        { name: '员工数量', included: true, description: '最多50人' },
+        { name: '基础功能', included: true, description: '组织人事、考勤管理' },
+        { name: '员工自助', included: true },
+        { name: '基础报表', included: true },
+        { name: '绩效管理', included: false },
+        { name: '薪酬管理', included: false },
+        { name: '培训管理', included: false },
+        { name: '数据导出', included: false },
+        { name: '高级权限', included: false },
+        { name: '企业协作', included: false },
+        { name: 'AI助手', included: false },
+        { name: '专属客服', included: false },
       ],
-      color: 'from-gray-500 to-gray-600',
-      icon: <Users className="h-6 w-6" />
     },
     {
       id: 'basic',
       name: '基础版',
-      description: '适合10-50人小团队',
-      price: 599,
-      duration: 'month',
-      maxUsers: 50,
-      maxSubAccounts: 3,
+      price: 299,
+      yearlyPrice: 2990,
+      description: '适合成长期企业',
       features: [
-        '包含免费版所有功能',
-        '招聘流程管理',
-        '3个子账号',
-        '50GB存储空间',
-        '薪酬管理',
-        '培训管理',
-        '邮件支持',
-        '月付¥50/月'
+        { name: '员工数量', included: true, description: '最多200人' },
+        { name: '基础功能', included: true },
+        { name: '员工自助', included: true },
+        { name: '基础报表', included: true },
+        { name: '绩效管理', included: true },
+        { name: '薪酬管理', included: true },
+        { name: '培训管理', included: true },
+        { name: '数据导出', included: false },
+        { name: '高级权限', included: false },
+        { name: '企业协作', included: false },
+        { name: 'AI助手', included: false },
+        { name: '专属客服', included: true, description: '工作时间' },
       ],
-      color: 'from-blue-500 to-blue-600',
-      icon: <Shield className="h-6 w-6" />
+      badge: '推荐',
     },
     {
       id: 'professional',
       name: '专业版',
-      description: '适合50-100人中型团队',
-      price: 1499,
-      duration: 'month',
-      maxUsers: 100,
-      maxSubAccounts: 9,
+      price: 899,
+      yearlyPrice: 8990,
+      description: '适合中型企业和快速成长企业',
+      popular: true,
+      badge: 'PRO',
       features: [
-        '包含基础版所有功能',
-        'AI智能分析',
-        '9个子账号',
-        '100GB存储空间',
-        '工作流引擎',
-        '智能面试系统',
-        '绩效预测',
-        '优先支持',
-        '月付¥125/月'
+        { name: '员工数量', included: true, description: '最多1000人' },
+        { name: '基础功能', included: true },
+        { name: '员工自助', included: true },
+        { name: '基础报表', included: true },
+        { name: '绩效管理', included: true, description: '包含360度评估' },
+        { name: '薪酬管理', included: true, description: '全功能' },
+        { name: '培训管理', included: true },
+        { name: '数据导出', included: true, description: '多种格式' },
+        { name: '高级权限', included: true, description: '企业级权限' },
+        { name: '企业协作', included: true, description: '钉钉/飞书/企业微信' },
+        { name: 'AI助手', included: true, description: '基础功能' },
+        { name: '专属客服', included: true, description: '7x24小时' },
       ],
-      color: 'from-purple-500 to-purple-600',
-      icon: <Building2 className="h-6 w-6" />
     },
     {
       id: 'enterprise',
       name: '企业版',
-      description: '适合100-500人大型企业',
       price: 2999,
-      duration: 'month',
-      maxUsers: 500,
-      maxSubAccounts: 50,
+      yearlyPrice: 29990,
+      description: '适合大型企业和集团企业',
+      badge: '企业',
       features: [
-        '包含专业版所有功能',
-        '50个子账号',
-        '500GB存储空间',
-        '定制化开发',
-        '专属客户经理',
-        'API集成',
-        'SLA保障',
-        '24/7技术支持',
-        '月付¥259/月'
+        { name: '员工数量', included: true, description: '不限人数' },
+        { name: '基础功能', included: true },
+        { name: '员工自助', included: true },
+        { name: '基础报表', included: true, description: '定制化报表' },
+        { name: '绩效管理', included: true, description: '高级功能+OKR' },
+        { name: '薪酬管理', included: true, description: '全功能+薪酬设计' },
+        { name: '培训管理', included: true },
+        { name: '数据导出', included: true, description: 'API接口' },
+        { name: '高级权限', included: true, description: '定制权限' },
+        { name: '企业协作', included: true, description: '全平台集成' },
+        { name: 'AI助手', included: true, description: '全部功能' },
+        { name: '专属客服', included: true, description: '专属顾问' },
+        { name: '私有化部署', included: true },
+        { name: '定制开发', included: true },
       ],
-      color: 'from-amber-500 to-amber-600',
-      icon: <Crown className="h-6 w-6" />
-    }
+    },
   ];
 
-  // 模拟子账号数据
-  useEffect(() => {
-    setSubAccounts([
-      {
-        id: '1',
-        name: '张三',
-        email: 'zhangsan@example.com',
-        role: 'hr',
-        status: 'active',
-        lastLogin: '2024-01-15 10:30',
-        createdAt: '2023-06-10',
-        department: '人力资源部'
-      },
-      {
-        id: '2',
-        name: '李四',
-        email: 'lisi@example.com',
-        role: 'manager',
-        status: 'active',
-        lastLogin: '2024-01-14 16:45',
-        createdAt: '2023-08-22',
-        department: '技术部'
-      },
-      {
-        id: '3',
-        name: '王五',
-        email: 'wangwu@example.com',
-        role: 'viewer',
-        status: 'inactive',
-        lastLogin: '2024-01-10 09:20',
-        createdAt: '2023-11-05',
-        department: '市场部'
-      }
-    ]);
-  }, []);
-
-  // 获取当前套餐配置
-  const getCurrentPlanConfig = () => {
-    return membershipPlans.find(plan => plan.id === currentPlan);
+  const getDisplayPrice = (plan: PricingPlan) => {
+    return selectedCycle === 'yearly' ? plan.yearlyPrice : plan.price;
   };
 
-  // 计算使用百分比
-  const calculateUsage = (current: number, limit: number) => {
-    return Math.round((current / limit) * 100);
+  const getDiscount = () => {
+    return selectedCycle === 'yearly' ? '年付省17%' : '';
   };
 
-  // 添加子账号
-  const handleAddSubAccount = () => {
-    const plan = getCurrentPlanConfig();
-    if (!plan || usageStats.currentSubAccounts >= plan.maxSubAccounts) {
-      return;
+  const handleSubscribe = (planId: Plan) => {
+    setSelectedPlan(planId);
+    if (planId === 'free') {
+      toast.success('已切换到免费版');
+    } else {
+      toast.success(`已选择${pricingPlans.find(p => p.id === planId)?.name}，跳转支付...`);
+      // 实际场景中会跳转到支付页面
+      setTimeout(() => {
+        window.location.href = `/dashboard/billing/payment?plan=${planId}&cycle=${selectedCycle}`;
+      }, 1000);
     }
-
-    const newAccount: SubAccount = {
-      id: Date.now().toString(),
-      name: newSubAccount.name,
-      email: newSubAccount.email,
-      role: newSubAccount.role,
-      status: 'active',
-      lastLogin: '-',
-      createdAt: new Date().toISOString().split('T')[0],
-      department: newSubAccount.department
-    };
-
-    setSubAccounts([...subAccounts, newAccount]);
-    setUsageStats({
-      ...usageStats,
-      currentSubAccounts: usageStats.currentSubAccounts + 1
-    });
-    setShowAddSubAccount(false);
-    setNewSubAccount({ name: '', email: '', role: 'viewer', department: '' });
-  };
-
-  // 删除子账号
-  const handleDeleteSubAccount = (id: string) => {
-    setSubAccounts(subAccounts.filter(account => account.id !== id));
-    setUsageStats({
-      ...usageStats,
-      currentSubAccounts: usageStats.currentSubAccounts - 1
-    });
-  };
-
-  // 升级套餐
-  const handleUpgrade = async () => {
-    if (!selectedPlan) return;
-    setCurrentPlan(selectedPlan);
-    setShowUpgradeDialog(false);
-  };
-
-  // 获取角色标签
-  const getRoleBadge = (role: SubAccountRole) => {
-    const config = {
-      admin: { label: '管理员', variant: 'destructive' as const },
-      hr: { label: 'HR', variant: 'default' as const },
-      manager: { label: '经理', variant: 'secondary' as const },
-      viewer: { label: '查看者', variant: 'outline' as const }
-    };
-    return config[role];
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">会员中心</h1>
-              <p className="text-sm text-gray-600 mt-1">管理您的会员套餐和子账号</p>
-            </div>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              当前套餐：{getCurrentPlanConfig()?.name}
-            </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* 页面标题 */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <Crown className="h-10 w-10 text-amber-600" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              选择您的订阅计划
+            </h1>
           </div>
+          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+            解锁企业级人力资源管理系统，提升组织效能，助力业务增长
+          </p>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-1/2">
-            <TabsTrigger value="overview">概览</TabsTrigger>
-            <TabsTrigger value="plans">套餐升级</TabsTrigger>
-            <TabsTrigger value="subaccounts">子账号管理</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">用户数</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {usageStats.currentUsers} / {getCurrentPlanConfig()?.maxUsers}
-                  </div>
-                  <Progress 
-                    value={calculateUsage(usageStats.currentUsers, getCurrentPlanConfig()?.maxUsers || 1)} 
-                    className="mt-2"
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">子账号</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {usageStats.currentSubAccounts} / {getCurrentPlanConfig()?.maxSubAccounts}
-                  </div>
-                  <Progress 
-                    value={calculateUsage(usageStats.currentSubAccounts, getCurrentPlanConfig()?.maxSubAccounts || 1)} 
-                    className="mt-2"
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">存储空间</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {usageStats.storageUsed}GB / {usageStats.storageLimit}GB
-                  </div>
-                  <Progress 
-                    value={calculateUsage(usageStats.storageUsed, usageStats.storageLimit)} 
-                    className="mt-2"
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">API调用</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {usageStats.apiCallsUsed} / {usageStats.apiCallsLimit}
-                  </div>
-                  <Progress 
-                    value={calculateUsage(usageStats.apiCallsUsed, usageStats.apiCallsLimit)} 
-                    className="mt-2"
-                  />
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>套餐信息</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">当前套餐：{getCurrentPlanConfig()?.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">价格：¥{getCurrentPlanConfig()?.price}/{getCurrentPlanConfig()?.duration === 'month' ? '月' : '年'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">功能：{getCurrentPlanConfig()?.features.length}项</span>
-                  </div>
+        {/* 计费周期选择 */}
+        <div className="flex items-center justify-center gap-4">
+          <Select value={selectedCycle} onValueChange={(v: BillingCycle) => setSelectedCycle(v)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">月付</SelectItem>
+              <SelectItem value="yearly">
+                <div className="flex items-center gap-2">
+                  <span>年付</span>
+                  <Badge className="bg-green-600">省17%</Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {getDiscount()}
+          </span>
+        </div>
 
-          <TabsContent value="plans" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {membershipPlans.map((plan) => (
-                <Card 
-                  key={plan.id} 
-                  className={`relative ${currentPlan === plan.id ? 'ring-2 ring-blue-500' : ''}`}
-                >
-                  {currentPlan === plan.id && (
-                    <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                      当前套餐
-                    </Badge>
-                  )}
-                  <CardHeader>
-                    <div className={`bg-gradient-to-r ${plan.color} p-4 rounded-lg mb-4`}>
-                      <div className="flex items-center justify-between text-white">
-                        {plan.icon}
-                        <span className="text-2xl font-bold">¥{plan.price}</span>
-                      </div>
-                      <div className="text-white/80 text-sm mt-1">
-                        /{plan.duration === 'month' ? '月' : '年'}
-                      </div>
-                    </div>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <CardDescription>{plan.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-sm text-gray-600">
-                        最多 {plan.maxUsers} 用户
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        最多 {plan.maxSubAccounts} 子账号
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    {currentPlan === plan.id ? (
-                      <Button disabled className="w-full">当前套餐</Button>
+        {/* 定价卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {pricingPlans.map((plan) => {
+            const displayPrice = getDisplayPrice(plan);
+            return (
+              <Card
+                key={plan.id}
+                className={`relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 ${
+                  plan.popular ? 'border-2 border-blue-600 shadow-xl' : ''
+                } ${selectedPlan === plan.id ? 'ring-2 ring-blue-600' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 text-sm font-semibold">
+                    最受欢迎
+                  </div>
+                )}
+                {plan.badge && !plan.popular && (
+                  <Badge className="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-purple-600">
+                    {plan.badge}
+                  </Badge>
+                )}
+                <CardHeader className="pt-6 pb-4">
+                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
+                  <CardDescription className="text-base mt-2">
+                    {plan.description}
+                  </CardDescription>
+                  <div className="mt-4">
+                    {displayPrice === 0 ? (
+                      <div className="text-3xl font-bold">免费</div>
                     ) : (
-                      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            className="w-full"
-                            onClick={() => setSelectedPlan(plan.id)}
-                          >
-                            升级套餐
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>升级到 {plan.name}</DialogTitle>
-                            <DialogDescription>
-                              确认要升级到 {plan.name} 吗？升级后立即生效。
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
-                              取消
-                            </Button>
-                            <Button onClick={handleUpgrade}>
-                              确认升级
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="subaccounts" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>子账号管理</CardTitle>
-                    <CardDescription>
-                      管理您的子账号，最多 {getCurrentPlanConfig()?.maxSubAccounts} 个
-                    </CardDescription>
-                  </div>
-                  <Dialog open={showAddSubAccount} onOpenChange={setShowAddSubAccount}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        添加子账号
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>添加子账号</DialogTitle>
-                        <DialogDescription>
-                          创建新的子账号并设置权限
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="name">姓名</Label>
-                          <Input
-                            id="name"
-                            value={newSubAccount.name}
-                            onChange={(e) => setNewSubAccount({ ...newSubAccount, name: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="email">邮箱</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={newSubAccount.email}
-                            onChange={(e) => setNewSubAccount({ ...newSubAccount, email: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="role">角色</Label>
-                          <Select
-                            value={newSubAccount.role}
-                            onValueChange={(value: any) => setNewSubAccount({ ...newSubAccount, role: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">管理员</SelectItem>
-                              <SelectItem value="hr">HR</SelectItem>
-                              <SelectItem value="manager">经理</SelectItem>
-                              <SelectItem value="viewer">查看者</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="department">部门</Label>
-                          <Input
-                            id="department"
-                            value={newSubAccount.department}
-                            onChange={(e) => setNewSubAccount({ ...newSubAccount, department: e.target.value })}
-                          />
-                        </div>
+                      <div>
+                        <span className="text-4xl font-bold">¥{displayPrice}</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                          /{selectedCycle === 'yearly' ? '年' : '月'}
+                        </span>
                       </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowAddSubAccount(false)}>
-                          取消
-                        </Button>
-                        <Button onClick={handleAddSubAccount}>
-                          添加
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>姓名</TableHead>
-                      <TableHead>邮箱</TableHead>
-                      <TableHead>部门</TableHead>
-                      <TableHead>角色</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>最后登录</TableHead>
-                      <TableHead>操作</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {subAccounts.map((account) => (
-                      <TableRow key={account.id}>
-                        <TableCell className="font-medium">{account.name}</TableCell>
-                        <TableCell>{account.email}</TableCell>
-                        <TableCell>{account.department || '-'}</TableCell>
-                        <TableCell>
-                          <Badge {...getRoleBadge(account.role)}>
-                            {getRoleBadge(account.role).label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={account.status === 'active' ? 'default' : 'secondary'}
-                          >
-                            {account.status === 'active' ? '活跃' : 
-                             account.status === 'inactive' ? '停用' : '冻结'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{account.lastLogin}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSubAccounts(subAccounts.map(a => 
-                                    a.id === account.id 
-                                      ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
-                                      : a
-                                  ));
-                                }}
-                              >
-                                {account.status === 'active' ? '停用账号' : '启用账号'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteSubAccount(account.id)}
-                                className="text-red-600"
-                              >
-                                删除账号
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        {feature.included ? (
+                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <X className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div>
+                          <span className={feature.included ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
+                            {feature.name}
+                          </span>
+                          {feature.description && (
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {feature.description}
+                            </div>
+                          )}
+                        </div>
+                      </li>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  </ul>
+                  <Button
+                    className="w-full mt-6"
+                    variant={plan.popular ? 'default' : 'outline'}
+                    onClick={() => handleSubscribe(plan.id)}
+                  >
+                    {selectedPlan === plan.id ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        已选择
+                      </>
+                    ) : (
+                      <>
+                        {displayPrice === 0 ? '免费使用' : '立即订阅'}
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* 功能对比 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">功能对比</CardTitle>
+            <CardDescription>详细了解各版本功能差异</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="coe">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="coe">COE中心</TabsTrigger>
+                <TabsTrigger value="hrbp">HRBP中心</TabsTrigger>
+                <TabsTrigger value="ssc">SSC中心</TabsTrigger>
+                <TabsTrigger value="premium">高级功能</TabsTrigger>
+                <TabsTrigger value="support">服务支持</TabsTrigger>
+              </TabsList>
+              <TabsContent value="coe" className="mt-6">
+                <div className="grid grid-cols-5 gap-4 text-sm">
+                  <div className="font-semibold">功能</div>
+                  <div className="font-semibold">免费版</div>
+                  <div className="font-semibold">基础版</div>
+                  <div className="font-semibold text-blue-600">专业版</div>
+                  <div className="font-semibold text-purple-600">企业版</div>
+
+                  <div className="py-2">目标设定</div>
+                  <div className="py-2 text-center"><X className="h-4 w-4 text-gray-400 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+
+                  <div className="py-2">绩效评估</div>
+                  <div className="py-2 text-center"><X className="h-4 w-4 text-gray-400 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+
+                  <div className="py-2">360度评估</div>
+                  <div className="py-2 text-center"><X className="h-4 w-4 text-gray-400 mx-auto" /></div>
+                  <div className="py-2 text-center"><X className="h-4 w-4 text-gray-400 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+
+                  <div className="py-2">薪酬核算</div>
+                  <div className="py-2 text-center"><X className="h-4 w-4 text-gray-400 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                  <div className="py-2 text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* 常见问题 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>常见问题</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="font-semibold flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-600" />
+                如何切换订阅计划？
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                您可以随时在会员中心切换订阅计划。升级立即生效，降级将在当前计费周期结束后生效。
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="font-semibold flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-600" />
+                年付有什么优惠？
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                年付可享受17%的折扣，相当于只需支付10个月的价格即可使用12个月。
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="font-semibold flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-600" />
+                可以申请退款吗？
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                我们提供7天无理由退款服务。如果您不满意，可在购买后7天内申请全额退款。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 企业专属服务 */}
+        <Alert className="border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+          <Crown className="h-4 w-4 text-purple-600" />
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <strong className="text-purple-900 dark:text-purple-100">企业专属服务</strong>
+                <span className="ml-2">：提供私有化部署、定制开发、专属顾问等企业级服务</span>
+              </div>
+              <Button variant="link" className="h-auto p-0 text-purple-600" asChild>
+                <a href="mailto:enterprise@pulseopti.com">
+                  联系我们 <ArrowRight className="h-4 w-4 ml-1 inline" />
+                </a>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       </div>
     </div>
   );
-};
-
-export default MembershipPage;
+}
