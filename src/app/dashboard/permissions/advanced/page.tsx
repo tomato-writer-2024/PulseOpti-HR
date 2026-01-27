@@ -1,658 +1,714 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Shield,
   Users,
-  Crown,
-  UserPlus,
-  Settings,
-  Lock,
-  Unlock,
-  ChevronRight,
-  Search,
+  Key,
+  Plus,
   Edit,
   Trash2,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowLeft,
-  Loader2,
+  Copy,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Settings,
+  Search,
+  Filter,
+  MoreVertical,
   RefreshCw,
+  Lock,
+  Unlock,
+  Crown,
+  Star,
+  Zap,
+  TrendingUp,
+  UserPlus,
+  LayoutGrid,
+  List,
+  Copy as CopyIcon,
 } from 'lucide-react';
 
+// 权限类型
+type PermissionLevel = 'admin' | 'manager' | 'employee' | 'viewer';
+type ModulePermission = 'read' | 'write' | 'delete' | 'approve';
+
+interface Role {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  level: PermissionLevel;
+  isSystem: boolean;
+  permissions: ModulePermissions;
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ModulePermissions {
+  employee: ModulePermission;
+  attendance: ModulePermission;
+  leave: ModulePermission;
+  performance: ModulePermission;
+  recruitment: ModulePermission;
+  training: ModulePermission;
+  compensation: ModulePermission;
+  settings: ModulePermission;
+  reports: ModulePermission;
+}
+
+interface RoleUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  department: string;
+  position: string;
+  role: string;
+  roleId: string;
+  roleName: string;
+  status: 'active' | 'inactive';
+  lastLogin?: string;
+}
+
+interface AuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: 'grant' | 'revoke' | 'modify' | 'delete';
+  resourceType: 'role' | 'permission' | 'user';
+  resourceId: string;
+  resourceName: string;
+  details: string;
+  ip: string;
+  timestamp: string;
+}
+
 export default function AdvancedPermissionsPage() {
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
-  const [roles, setRoles] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState('accounts');
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('roles');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('all');
+
+  // 角色数据
+  const [roles, setRoles] = useState<Role[]>([
+    {
+      id: '1',
+      name: '超级管理员',
+      code: 'SUPER_ADMIN',
+      description: '拥有系统的所有权限',
+      level: 'admin',
+      isSystem: true,
+      permissions: {
+        employee: 'delete',
+        attendance: 'delete',
+        leave: 'approve',
+        performance: 'delete',
+        recruitment: 'delete',
+        training: 'delete',
+        compensation: 'delete',
+        settings: 'delete',
+        reports: 'delete',
+      },
+      userCount: 3,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
+    },
+    {
+      id: '2',
+      name: '部门经理',
+      code: 'DEPT_MANAGER',
+      description: '管理部门范围内的员工和数据',
+      level: 'manager',
+      isSystem: true,
+      permissions: {
+        employee: 'write',
+        attendance: 'write',
+        leave: 'approve',
+        performance: 'write',
+        recruitment: 'read',
+        training: 'write',
+        compensation: 'read',
+        settings: 'read',
+        reports: 'write',
+      },
+      userCount: 12,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-03-15',
+    },
+    {
+      id: '3',
+      name: 'HR专员',
+      code: 'HR_SPECIALIST',
+      description: '负责人力资源日常管理工作',
+      level: 'manager',
+      isSystem: true,
+      permissions: {
+        employee: 'write',
+        attendance: 'write',
+        leave: 'approve',
+        performance: 'write',
+        recruitment: 'write',
+        training: 'write',
+        compensation: 'read',
+        settings: 'read',
+        reports: 'write',
+      },
+      userCount: 8,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-03-15',
+    },
+    {
+      id: '4',
+      name: '普通员工',
+      code: 'EMPLOYEE',
+      description: '查看个人信息和进行基本操作',
+      level: 'employee',
+      isSystem: true,
+      permissions: {
+        employee: 'read',
+        attendance: 'write',
+        leave: 'write',
+        performance: 'read',
+        recruitment: 'read',
+        training: 'read',
+        compensation: 'read',
+        settings: 'read',
+        reports: 'read',
+      },
+      userCount: 125,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
+    },
+    {
+      id: '5',
+      name: '访客',
+      code: 'VISITOR',
+      description: '仅查看权限，无编辑权限',
+      level: 'viewer',
+      isSystem: true,
+      permissions: {
+        employee: 'read',
+        attendance: 'read',
+        leave: 'read',
+        performance: 'read',
+        recruitment: 'read',
+        training: 'read',
+        compensation: 'read',
+        settings: 'read',
+        reports: 'read',
+      },
+      userCount: 5,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
+    },
+    {
+      id: '6',
+      name: '财务经理',
+      code: 'FINANCE_MANAGER',
+      description: '负责薪资和薪酬相关管理',
+      level: 'manager',
+      isSystem: false,
+      permissions: {
+        employee: 'read',
+        attendance: 'read',
+        leave: 'read',
+        performance: 'read',
+        recruitment: 'read',
+        training: 'read',
+        compensation: 'approve',
+        settings: 'read',
+        reports: 'delete',
+      },
+      userCount: 2,
+      createdAt: '2024-02-15',
+      updatedAt: '2024-04-01',
+    },
+  ]);
+
+  // 角色用户数据
+  const [roleUsers, setRoleUsers] = useState<RoleUser[]>([
+    {
+      id: '1',
+      name: '张三',
+      email: 'zhangsan@example.com',
+      department: '技术部',
+      position: '技术总监',
+      role: 'admin',
+      roleId: '1',
+      roleName: '超级管理员',
+      status: 'active',
+      lastLogin: '2025-04-18 09:30:15',
+    },
+    {
+      id: '2',
+      name: '李四',
+      email: 'lisi@example.com',
+      department: '销售部',
+      position: '销售经理',
+      role: 'manager',
+      roleId: '2',
+      roleName: '部门经理',
+      status: 'active',
+      lastLogin: '2025-04-18 08:45:22',
+    },
+    {
+      id: '3',
+      name: '王五',
+      email: 'wangwu@example.com',
+      department: '人事部',
+      position: 'HR专员',
+      role: 'manager',
+      roleId: '3',
+      roleName: 'HR专员',
+      status: 'active',
+      lastLogin: '2025-04-18 09:10:08',
+    },
+    {
+      id: '4',
+      name: '赵六',
+      email: 'zhaoliu@example.com',
+      department: '技术部',
+      position: '前端开发工程师',
+      role: 'employee',
+      roleId: '4',
+      roleName: '普通员工',
+      status: 'active',
+      lastLogin: '2025-04-18 09:00:33',
+    },
+  ]);
+
+  // 审计日志数据
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
+    {
+      id: '1',
+      userId: '1',
+      userName: '张三',
+      action: 'modify',
+      resourceType: 'permission',
+      resourceId: '2',
+      resourceName: '部门经理',
+      details: '修改了"部门经理"角色的请假审批权限',
+      ip: '192.168.1.100',
+      timestamp: '2025-04-18 14:30:22',
+    },
+    {
+      id: '2',
+      userId: '1',
+      userName: '张三',
+      action: 'grant',
+      resourceType: 'user',
+      resourceId: '4',
+      resourceName: '赵六',
+      details: '为用户"赵六"分配了"普通员工"角色',
+      ip: '192.168.1.100',
+      timestamp: '2025-04-18 11:20:15',
+    },
+    {
+      id: '3',
+      userId: '2',
+      userName: '李四',
+      action: 'modify',
+      resourceType: 'role',
+      resourceId: '2',
+      resourceName: '部门经理',
+      details: '修改了"部门经理"角色的绩效管理权限',
+      ip: '192.168.1.105',
+      timestamp: '2025-04-17 16:45:30',
+    },
+  ]);
+
+  // 弹窗状态
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  // 新建账号表单
-  const [accountForm, setAccountForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    userType: 'employee',
-    role: '',
-    departmentId: '',
+  // 权限级别映射
+  const levelMap: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    admin: { label: '管理员', color: 'bg-red-100 text-red-800', icon: <Crown className="h-4 w-4" /> },
+    manager: { label: '管理者', color: 'bg-purple-100 text-purple-800', icon: <Star className="h-4 w-4" /> },
+    employee: { label: '员工', color: 'bg-blue-100 text-blue-800', icon: <Users className="h-4 w-4" /> },
+    viewer: { label: '访客', color: 'bg-gray-100 text-gray-800', icon: <Eye className="h-4 w-4" /> },
+  };
+
+  // 权限级别映射
+  const permissionLevelMap: Record<string, string> = {
+    read: '只读',
+    write: '编辑',
+    delete: '删除',
+    approve: '审批',
+  };
+
+  // 模块名称映射
+  const moduleMap: Record<keyof ModulePermissions, string> = {
+    employee: '员工管理',
+    attendance: '考勤管理',
+    leave: '请假管理',
+    performance: '绩效管理',
+    recruitment: '招聘管理',
+    training: '培训管理',
+    compensation: '薪酬管理',
+    settings: '系统设置',
+    reports: '报表分析',
+  };
+
+  // 操作类型映射
+  const actionMap: Record<string, { label: string; color: string }> = {
+    grant: { label: '授予', color: 'bg-green-100 text-green-800' },
+    revoke: { label: '撤销', color: 'bg-red-100 text-red-800' },
+    modify: { label: '修改', color: 'bg-yellow-100 text-yellow-800' },
+    delete: { label: '删除', color: 'bg-red-100 text-red-800' },
+  };
+
+  // 过滤角色
+  const filteredRoles = roles.filter(role => {
+    const matchSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       role.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchLevel = levelFilter === 'all' || role.level === levelFilter;
+    return matchSearch && matchLevel;
   });
 
-  // 新建角色表单
-  const [roleForm, setRoleForm] = useState({
-    name: '',
-    code: '',
-    description: '',
-    level: '3',
-    permissions: [] as string[],
-  });
-
-  // 权限模块定义
-  const permissionModules = [
-    {
-      id: 'organization',
-      name: '组织人事',
-      permissions: [
-        { id: 'org.view', name: '查看组织架构' },
-        { id: 'org.create', name: '创建部门/职位' },
-        { id: 'org.edit', name: '编辑部门/职位' },
-        { id: 'org.delete', name: '删除部门/职位' },
-        { id: 'employee.view', name: '查看员工信息' },
-        { id: 'employee.create', name: '新增员工' },
-        { id: 'employee.edit', name: '编辑员工信息' },
-        { id: 'employee.delete', name: '删除员工' },
-        { id: 'employee.export', name: '导出员工数据' },
-      ],
-    },
-    {
-      id: 'recruitment',
-      name: '招聘管理',
-      permissions: [
-        { id: 'recruit.view', name: '查看招聘信息' },
-        { id: 'recruit.create', name: '发布职位' },
-        { id: 'recruit.edit', name: '编辑职位' },
-        { id: 'recruit.delete', name: '删除职位' },
-        { id: 'resume.view', name: '查看简历' },
-        { id: 'resume.screen', name: '筛选简历' },
-        { id: 'interview.view', name: '查看面试安排' },
-        { id: 'interview.manage', name: '管理面试' },
-        { id: 'offer.view', name: '查看Offer' },
-        { id: 'offer.send', name: '发送Offer' },
-      ],
-    },
-    {
-      id: 'performance',
-      name: '绩效管理',
-      permissions: [
-        { id: 'perf.view', name: '查看绩效数据' },
-        { id: 'perf.goal.create', name: '设定目标' },
-        { id: 'perf.goal.edit', name: '编辑目标' },
-        { id: 'perf.assess', name: '进行评估' },
-        { id: 'perf.review', name: '审核评估' },
-        { id: 'perf.analyze', name: '绩效分析' },
-      ],
-    },
-    {
-      id: 'compensation',
-      name: '薪酬管理',
-      permissions: [
-        { id: 'salary.view', name: '查看薪资数据' },
-        { id: 'salary.calc', name: '计算工资' },
-        { id: 'salary.edit', name: '编辑工资' },
-        { id: 'salary.approve', name: '审核工资' },
-        { id: 'salary.export', name: '导出工资表' },
-      ],
-    },
-    {
-      id: 'attendance',
-      name: '考勤管理',
-      permissions: [
-        { id: 'att.view', name: '查看考勤记录' },
-        { id: 'att.checkin', name: '打卡签到' },
-        { id: 'att.schedule', name: '排班管理' },
-        { id: 'att.leave', name: '请假审批' },
-        { id: 'att.overtime', name: '加班审批' },
-        { id: 'att.export', name: '导出考勤数据' },
-      ],
-    },
-    {
-      id: 'ai',
-      name: 'AI功能',
-      permissions: [
-        { id: 'ai.view', name: '查看AI分析' },
-        { id: 'ai.job_profile', name: '岗位画像生成' },
-        { id: 'ai.resume', name: 'AI简历筛选' },
-        { id: 'ai.interview', name: 'AI面试官' },
-        { id: 'ai.talent', name: '人才盘点' },
-        { id: 'ai.turnover', name: '离职分析' },
-        { id: 'ai.prediction', name: '绩效预测' },
-      ],
-    },
-    {
-      id: 'workflow',
-      name: '工作流',
-      permissions: [
-        { id: 'wf.view', name: '查看工作流' },
-        { id: 'wf.create', name: '创建工作流' },
-        { id: 'wf.edit', name: '编辑工作流' },
-        { id: 'wf.execute', name: '执行工作流' },
-        { id: 'wf.approve', name: '审批流程' },
-      ],
-    },
-    {
-      id: 'system',
-      name: '系统管理',
-      permissions: [
-        { id: 'sys.users', name: '用户管理' },
-        { id: 'sys.roles', name: '角色管理' },
-        { id: 'sys.permissions', name: '权限管理' },
-        { id: 'sys.settings', name: '系统设置' },
-        { id: 'sys.logs', name: '查看日志' },
-        { id: 'sys.exports', name: '数据导出' },
-      ],
-    },
-  ];
-
-  // 账号类型配置
-  const accountTypes = {
-    main_account: {
-      label: '主账号',
-      description: '拥有完整权限，可管理所有子账号和员工',
-      icon: Crown,
-      color: 'bg-amber-100 text-amber-700',
-    },
-    sub_account: {
-      label: '子账号',
-      description: '拥有部分管理权限，可管理特定部门或功能',
-      icon: Shield,
-      color: 'bg-blue-100 text-blue-700',
-    },
-    employee: {
-      label: '普通员工',
-      description: '普通员工账号，仅限个人相关功能',
-      icon: Users,
-      color: 'bg-gray-100 text-gray-700',
-    },
-  };
-
-  // 加载数据
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [usersRes, rolesRes] = await Promise.all([
-        fetch('/api/users/list'),
-        fetch('/api/roles/list'),
-      ]);
-
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setUsers(usersData.data || []);
-      }
-
-      if (rolesRes.ok) {
-        const rolesData = await rolesRes.json();
-        setRoles(rolesData.data || []);
-      }
-    } catch (error) {
-      console.error('加载数据失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 创建账号
-  const handleCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-
-    try {
-      const response = await fetch('/api/users/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(accountForm),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '创建失败');
-      }
-
-      alert('账号创建成功！');
-      setCreateDialogOpen(false);
-      setAccountForm({ name: '', email: '', phone: '', userType: 'employee', role: '', departmentId: '' });
-      loadData();
-    } catch (error: any) {
-      alert(error.message || '创建失败，请重试');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // 创建角色
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-
-    try {
-      const response = await fetch('/api/roles/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(roleForm),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '创建失败');
-      }
-
-      alert('角色创建成功！');
-      setRoleDialogOpen(false);
-      setRoleForm({ name: '', code: '', description: '', level: '3', permissions: [] });
-      loadData();
-    } catch (error: any) {
-      alert(error.message || '创建失败，请重试');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // 切换权限选择
-  const togglePermission = (permissionId: string) => {
-    if (roleForm.permissions.includes(permissionId)) {
-      setRoleForm({
-        ...roleForm,
-        permissions: roleForm.permissions.filter(p => p !== permissionId),
-      });
-    } else {
-      setRoleForm({
-        ...roleForm,
-        permissions: [...roleForm.permissions, permissionId],
-      });
-    }
-  };
-
-  // 获取账号类型统计
-  const getAccountStats = () => {
-    const stats = {
-      main_account: users.filter(u => u.userType === 'main_account').length,
-      sub_account: users.filter(u => u.userType === 'sub_account').length,
-      employee: users.filter(u => u.userType === 'employee').length,
+  // 获取权限徽章
+  const getPermissionBadge = (permission: ModulePermission) => {
+    const badges: Record<ModulePermission, { variant: 'default' | 'secondary' | 'outline'; text: string }> = {
+      read: { variant: 'secondary', text: '只读' },
+      write: { variant: 'default', text: '编辑' },
+      delete: { variant: 'default', text: '删除' },
+      approve: { variant: 'default', text: '审批' },
     };
-    return stats;
+    const badge = badges[permission];
+    return <Badge variant={badge.variant}>{badge.text}</Badge>;
   };
-
-  const stats = getAccountStats();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 p-6">
-      <div className="container mx-auto max-w-7xl">
-        {/* 顶部导航 */}
-        <div className="mb-8">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900 mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              返回仪表盘
-            </Button>
-          </Link>
-          <h1 className="text-4xl font-bold text-gray-900">深度权限管理</h1>
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">高级权限管理</h1>
           <p className="text-gray-600 mt-2">
-            主账号-子账号-普通员工账号三级权限体系，支持精细化权限自定义
+            企业级权限控制，精细化管理用户权限
+            <Badge variant="secondary" className="ml-2">企业版功能</Badge>
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            刷新
+          </Button>
+          <Button onClick={() => {
+            setSelectedRole(null);
+            setRoleDialogOpen(true);
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
+            创建角色
+          </Button>
+        </div>
+      </div>
 
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {Object.entries(accountTypes).map(([type, config]) => {
-            const Icon = config.icon;
-            const count = stats[type as keyof typeof stats];
+      {/* 功能介绍 */}
+      <Alert>
+        <Zap className="h-4 w-4" />
+        <AlertDescription>
+          高级权限管理提供细粒度的权限控制，支持角色继承、动态权限分配和完整的审计日志追踪，确保系统安全和数据保护。
+        </AlertDescription>
+      </Alert>
 
-            return (
-              <Card key={type} className="border-2 hover:shadow-lg transition-all">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{config.label}</CardTitle>
-                  <div className={`p-2 rounded-lg ${config.color}`}>
-                    <Icon className="h-4 w-4" />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="roles">角色管理</TabsTrigger>
+          <TabsTrigger value="users">角色用户</TabsTrigger>
+          <TabsTrigger value="permissions">权限配置</TabsTrigger>
+          <TabsTrigger value="audit">审计日志</TabsTrigger>
+        </TabsList>
+
+        {/* 角色管理Tab */}
+        <TabsContent value="roles" className="space-y-6">
+          {/* 筛选栏 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="搜索角色名称或编码"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="级别" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部级别</SelectItem>
+                  <SelectItem value="admin">管理员</SelectItem>
+                  <SelectItem value="manager">管理者</SelectItem>
+                  <SelectItem value="employee">员工</SelectItem>
+                  <SelectItem value="viewer">访客</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* 角色卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredRoles.map((role) => (
+              <Card key={role.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CardTitle className="text-base">{role.name}</CardTitle>
+                        {role.isSystem && (
+                          <Badge variant="secondary" className="text-xs">系统角色</Badge>
+                        )}
+                      </div>
+                      <CardDescription className="text-xs">{role.code}</CardDescription>
+                    </div>
+                    {levelMap[role.level].icon}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{count}</div>
-                  <p className="text-xs text-gray-500 mt-1">{config.description}</p>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-gray-600 line-clamp-2">{role.description}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge className={levelMap[role.level].color}>
+                      {levelMap[role.level].label}
+                    </Badge>
+                    <Badge variant="outline">{role.userCount} 用户</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-blue-600">
+                        {Object.values(role.permissions).filter(p => p === 'read').length}
+                      </div>
+                      <div className="text-xs text-gray-600">只读</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-green-600">
+                        {Object.values(role.permissions).filter(p => p === 'write').length}
+                      </div>
+                      <div className="text-xs text-gray-600">编辑</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-red-600">
+                        {Object.values(role.permissions).filter(p => p === 'delete' || p === 'approve').length}
+                      </div>
+                      <div className="text-xs text-gray-600">高级</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setSelectedRole(role);
+                        setRoleDialogOpen(true);
+                      }}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        编辑
+                      </Button>
+                      {!role.isSystem && (
+                        <Button variant="ghost" size="sm">
+                          <Copy className="h-4 w-4 mr-1" />
+                          复制
+                        </Button>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        </TabsContent>
 
-        {/* 主内容区 */}
-        <Card className="border-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">权限管理中心</CardTitle>
-                <CardDescription>管理账号、角色和权限配置</CardDescription>
-              </div>
-              <div className="flex gap-3">
-                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      新建账号
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>新建账号</DialogTitle>
-                      <DialogDescription>创建子账号或员工账号</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleCreateAccount} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">姓名 *</Label>
-                          <Input
-                            id="name"
-                            value={accountForm.name}
-                            onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">邮箱 *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={accountForm.email}
-                            onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">手机号</Label>
-                          <Input
-                            id="phone"
-                            value={accountForm.phone}
-                            onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="userType">账号类型 *</Label>
-                          <Select
-                            value={accountForm.userType}
-                            onValueChange={(value) => setAccountForm({ ...accountForm, userType: value })}
-                          >
-                            <SelectTrigger id="userType">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="sub_account">子账号</SelectItem>
-                              <SelectItem value="employee">普通员工</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role">分配角色</Label>
-                        <Select
-                          value={accountForm.role}
-                          onValueChange={(value) => setAccountForm({ ...accountForm, role: value })}
-                        >
-                          <SelectTrigger id="role">
-                            <SelectValue placeholder="选择角色" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {roles.map((role) => (
-                              <SelectItem key={role.id} value={role.id}>
-                                {role.name} ({role.level}级)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                          取消
-                        </Button>
-                        <Button type="submit" disabled={creating}>
-                          {creating ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              创建中...
-                            </>
-                          ) : (
-                            '创建账号'
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Settings className="mr-2 h-4 w-4" />
-                      新建角色
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>新建角色</DialogTitle>
-                      <DialogDescription>创建自定义角色并分配权限</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleCreateRole} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="roleName">角色名称 *</Label>
-                          <Input
-                            id="roleName"
-                            value={roleForm.name}
-                            onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="roleCode">角色代码 *</Label>
-                          <Input
-                            id="roleCode"
-                            value={roleForm.code}
-                            onChange={(e) => setRoleForm({ ...roleForm, code: e.target.value })}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="roleDescription">角色描述</Label>
-                        <Input
-                          id="roleDescription"
-                          value={roleForm.description}
-                          onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="roleLevel">角色级别 (1-5，数字越小权限越大)</Label>
-                        <Select
-                          value={roleForm.level}
-                          onValueChange={(value) => setRoleForm({ ...roleForm, level: value })}
-                        >
-                          <SelectTrigger id="roleLevel">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[1, 2, 3, 4, 5].map((level) => (
-                              <SelectItem key={level} value={level.toString()}>
-                                {level}级
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-4">
-                        <Label>权限配置</Label>
-                        <Alert className="bg-blue-50 border-blue-200">
-                          <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                          <AlertDescription className="text-blue-800">
-                            已选择 {roleForm.permissions.length} 个权限
-                          </AlertDescription>
-                        </Alert>
-
-                        {permissionModules.map((module) => (
-                          <Card key={module.id} className="border">
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-base">{module.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {module.permissions.map((perm) => (
-                                  <div
-                                    key={perm.id}
-                                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => togglePermission(perm.id)}
-                                  >
-                                    <Switch
-                                      checked={roleForm.permissions.includes(perm.id)}
-                                      onCheckedChange={() => togglePermission(perm.id)}
-                                    />
-                                    <span className="text-sm">{perm.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setRoleDialogOpen(false)}>
-                          取消
-                        </Button>
-                        <Button type="submit" disabled={creating}>
-                          {creating ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              创建中...
-                            </>
-                          ) : (
-                            '创建角色'
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="accounts">账号管理</TabsTrigger>
-                <TabsTrigger value="roles">角色管理</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="accounts" className="space-y-4">
-                <Alert className="bg-amber-50 border-amber-200">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <AlertDescription className="text-amber-800">
-                    主账号拥有完整权限，子账号和普通员工权限由角色定义
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-3">
-                  {users.map((user) => {
-                    const typeConfig = accountTypes[user.userType as keyof typeof accountTypes];
-                    const TypeIcon = typeConfig.icon;
-
-                    return (
-                      <Card key={user.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-lg ${typeConfig.color}`}>
-                                <TypeIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                                <p className="text-sm text-gray-600">{user.email}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Badge className={typeConfig.color}>{typeConfig.label}</Badge>
-                              {user.role && (
-                                <Badge variant="outline">{user.role}</Badge>
-                              )}
-                              <Button size="sm" variant="ghost">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="roles" className="space-y-4">
-                <div className="space-y-3">
-                  {roles.map((role) => (
-                    <Card key={role.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 bg-purple-100 rounded-lg">
-                              <Shield className="h-5 w-5 text-purple-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-900">{role.name}</h3>
-                              <p className="text-sm text-gray-600">
-                                {role.description || '暂无描述'} · {role.level}级权限
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline">{role.permissions?.length || 0} 个权限</Badge>
-                            <Button size="sm" variant="ghost">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+        {/* 角色用户Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>角色用户</CardTitle>
+              <CardDescription>查看和管理各角色的用户分配</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>用户</TableHead>
+                    <TableHead>部门</TableHead>
+                    <TableHead>职位</TableHead>
+                    <TableHead>角色</TableHead>
+                    <TableHead>级别</TableHead>
+                    <TableHead>最后登录</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roleUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-xs text-gray-600">{user.email}</div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </TableCell>
+                      <TableCell>{user.department}</TableCell>
+                      <TableCell>{user.position}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{user.roleName}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={levelMap[user.role].color}>
+                          {levelMap[user.role].label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{user.lastLogin || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                          {user.status === 'active' ? '活跃' : '停用'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 权限配置Tab */}
+        <TabsContent value="permissions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>权限矩阵</CardTitle>
+              <CardDescription>配置各角色在不同模块的权限级别</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-48">角色</TableHead>
+                      {Object.keys(moduleMap).map((module) => (
+                        <TableHead key={module} className="min-w-24">{moduleMap[module as keyof typeof moduleMap]}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {roles.map((role) => (
+                      <TableRow key={role.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {levelMap[role.level].icon}
+                            <span className="font-medium">{role.name}</span>
+                            {role.isSystem && <Badge variant="secondary" className="text-xs">系统</Badge>}
+                          </div>
+                        </TableCell>
+                        {Object.entries(role.permissions).map(([module, permission]) => (
+                          <TableCell key={module}>
+                            {getPermissionBadge(permission)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 审计日志Tab */}
+        <TabsContent value="audit" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>审计日志</CardTitle>
+              <CardDescription>追踪所有权限变更操作</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {auditLogs.map((log) => (
+                  <div key={log.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${actionMap[log.action].color}`}>
+                      <Shield className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{log.userName}</span>
+                          <Badge className={actionMap[log.action].color}>{actionMap[log.action].label}</Badge>
+                          <span className="text-sm text-gray-600">{log.resourceName}</span>
+                        </div>
+                        <span className="text-sm text-gray-600">{log.timestamp}</span>
+                      </div>
+                      <div className="text-sm text-gray-600">{log.details}</div>
+                      <div className="text-xs text-gray-500 mt-1">IP: {log.ip}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
