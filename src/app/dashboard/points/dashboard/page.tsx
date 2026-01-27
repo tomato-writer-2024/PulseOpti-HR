@@ -19,6 +19,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/theme';
 

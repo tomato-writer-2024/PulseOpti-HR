@@ -30,7 +30,7 @@ export function PerformanceMonitor() {
         console.log('[Performance Navigation]', {
           domContentLoaded: perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
           loadComplete: perfData.loadEventEnd - perfData.loadEventStart,
-          totalLoadTime: perfData.loadEventEnd - perfData.navigationStart,
+          totalLoadTime: perfData.loadEventEnd - perfData.startTime,
         });
       }
     }
@@ -149,7 +149,9 @@ export function LazyImage({
   className,
   placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E',
   ...props
-}: React.ImgHTMLAttributes<HTMLImageElement>) {
+}: Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'placeholder'> & {
+  placeholder?: string;
+}) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -158,8 +160,8 @@ export function LazyImage({
       ([entry]) => {
         if (entry.isIntersecting) {
           const img = imgRef.current;
-          if (img) {
-            img.src = src || '';
+          if (img && src) {
+            img.src = typeof src === 'string' ? src : placeholder;
             observer.unobserve(img);
           }
         }
