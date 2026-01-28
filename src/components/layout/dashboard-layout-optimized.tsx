@@ -852,19 +852,26 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
         </ScrollArea>
 
         {/* 底部用户信息 */}
-        <div className="border-t p-4">
+        <div className="border-t p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 px-3">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 ring-2 ring-purple-600">
                   <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white text-xs">
                     HR
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">HR管理员</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">admin@company.com</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    HR管理员
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    admin@company.com
+                  </div>
                 </div>
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs">
+                  FREE
+                </Badge>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
@@ -882,6 +889,7 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
               <DropdownMenuItem>
                 <Bell className="h-4 w-4 mr-2" />
                 消息通知
+                <Badge className="ml-auto bg-red-600 text-white">5</Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-600">
@@ -890,6 +898,17 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* PRO升级引导 */}
+          <div className="mt-3">
+            <Button 
+              className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white text-xs"
+              size="sm"
+            >
+              <Crown className="h-3 w-3 mr-1" />
+              升级PRO，解锁更多功能
+            </Button>
+          </div>
         </div>
       </aside>
 
@@ -919,14 +938,40 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative">
+            {/* 搜索框 */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索功能、员工、数据..."
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-900 transition-all"
+              />
+            </div>
+            
+            {/* 通知 */}
+            <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
               <Bell className="h-5 w-5" />
               <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Crown className="h-4 w-4" />
-              升级PRO
-            </Button>
+            
+            {/* 快捷操作 */}
+            <Link href="/dashboard/quick-actions">
+              <Button variant="outline" size="sm" className="gap-2 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 dark:hover:bg-purple-950/30 dark:hover:border-purple-700 dark:hover:text-purple-400 transition-all">
+                <Plus className="h-4 w-4" />
+                快速创建
+              </Button>
+            </Link>
+            
+            {/* PRO升级 */}
+            <Link href="/pricing">
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 gap-2"
+              >
+                <Crown className="h-4 w-4" />
+                升级PRO
+              </Button>
+            </Link>
           </div>
         </header>
 
