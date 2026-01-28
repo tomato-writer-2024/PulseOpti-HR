@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +22,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
@@ -32,553 +33,789 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import {
   Target,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertCircle,
   Plus,
   Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Award,
-  Star,
+  Eye,
   Calendar,
   User,
-  Building2,
+  Award,
+  BarChart3,
+  Download,
   Filter,
   Search,
-  Download,
-  FileText,
-  BarChart3,
-  LineChart,
-  PieChart,
-  MoreVertical,
-  Save,
-  Send,
-  Eye,
+  Star,
+  Flag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 类型定义
-type GoalType = 'okr' | 'kpi' | 'smart';
-type GoalStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
-type GoalPeriod = 'monthly' | 'quarterly' | 'yearly';
+interface OKRGoal {
+  id: string;
+  objective: string;
+  keyResults: KeyResult[];
+  ownerId: string;
+  ownerName: string;
+  ownerDepartment: string;
+  period: string;
+  type: 'individual' | 'department' | 'company';
+  priority: 'high' | 'medium' | 'low';
+  status: 'draft' | 'active' | 'completed' | 'delayed' | 'cancelled';
+  progress: number;
+  startDate: string;
+  endDate: string;
+  alignsWith: string[];
+  milestones: Milestone[];
+  weight: number;
+  category: string;
+}
 
-interface Goal {
+interface KeyResult {
   id: string;
   title: string;
   description: string;
-  type: GoalType;
-  status: GoalStatus;
-  period: GoalPeriod;
-  owner: string;
-  ownerAvatar?: string;
-  department: string;
+  type: 'metric' | 'milestone' | 'binary';
+  targetValue: number;
+  currentValue: number;
+  unit: string;
   progress: number;
-  weight: number;
+  status: 'on-track' | 'at-risk' | 'off-track' | 'completed';
   dueDate: string;
-  createdAt: string;
-  children?: Goal[];
 }
 
-interface GoalMetric {
+interface Milestone {
   id: string;
-  name: string;
-  target: number;
-  current: number;
-  unit: string;
-  trend: 'up' | 'down' | 'stable';
+  title: string;
+  targetDate: string;
+  status: 'pending' | 'completed' | 'delayed';
 }
 
 export default function GoalSettingPage() {
-  const [activeTab, setActiveTab] = useState('my-goals');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('okr');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('2024-Q4');
 
-  // 目标数据
-  const [goals] = useState<Goal[]>([
+  const [okrGoals, setOkrGoals] = useState<OKRGoal[]>([
     {
       id: '1',
-      title: '完成Q3招聘计划',
-      description: '完成10名技术岗位招聘，包括3名高级工程师',
-      type: 'okr',
-      status: 'in_progress',
-      period: 'quarterly',
-      owner: '张三',
-      ownerAvatar: '',
-      department: '技术部',
-      progress: 70,
+      objective: '提升产品用户体验，增加用户粘性',
+      keyResults: [
+        {
+          id: 'kr1',
+          title: '日活跃用户数（DAU）提升30%',
+          description: '从当前的10万DAU提升到13万',
+          type: 'metric',
+          targetValue: 130000,
+          currentValue: 115000,
+          unit: '用户',
+          progress: 50,
+          status: 'on-track',
+          dueDate: '2024-12-31',
+        },
+        {
+          id: 'kr2',
+          title: '用户留存率提升至40%',
+          description: '30天留存率从35%提升到40%',
+          type: 'metric',
+          targetValue: 40,
+          currentValue: 37,
+          unit: '%',
+          progress: 60,
+          status: 'on-track',
+          dueDate: '2024-12-31',
+        },
+        {
+          id: 'kr3',
+          title: '上线新的智能推荐功能',
+          description: '完成AI推荐算法开发和上线',
+          type: 'milestone',
+          targetValue: 1,
+          currentValue: 0,
+          unit: '',
+          progress: 80,
+          status: 'on-track',
+          dueDate: '2024-12-15',
+        },
+      ],
+      ownerId: 'EMP001',
+      ownerName: '张三',
+      ownerDepartment: '产品部',
+      period: '2024-Q4',
+      type: 'individual',
+      priority: 'high',
+      status: 'active',
+      progress: 63,
+      startDate: '2024-10-01',
+      endDate: '2024-12-31',
+      alignsWith: ['提升产品竞争力', '增加市场份额'],
+      milestones: [
+        { id: 'm1', title: '完成用户调研', targetDate: '2024-10-15', status: 'completed' },
+        { id: 'm2', title: '上线功能原型', targetDate: '2024-11-15', status: 'completed' },
+        { id: 'm3', title: '正式上线', targetDate: '2024-12-15', status: 'pending' },
+      ],
       weight: 30,
-      dueDate: '2025-06-30',
-      createdAt: '2025-04-01',
+      category: '产品创新',
     },
     {
       id: '2',
-      title: '提升产品用户满意度',
-      description: '用户满意度从85%提升到90%',
-      type: 'kpi',
-      status: 'in_progress',
-      period: 'quarterly',
-      owner: '李四',
-      ownerAvatar: '',
-      department: '产品部',
-      progress: 45,
+      objective: '扩大市场覆盖，提升品牌影响力',
+      keyResults: [
+        {
+          id: 'kr4',
+          title: '新增500家企业客户',
+          description: '拓展B端客户群体',
+          type: 'metric',
+          targetValue: 500,
+          currentValue: 320,
+          unit: '家',
+          progress: 64,
+          status: 'on-track',
+          dueDate: '2024-12-31',
+        },
+        {
+          id: 'kr5',
+          title: '市场覆盖率提升至60%',
+          description: '覆盖全国主要一二线城市',
+          type: 'metric',
+          targetValue: 60,
+          currentValue: 45,
+          unit: '%',
+          progress: 75,
+          status: 'on-track',
+          dueDate: '2024-12-31',
+        },
+      ],
+      ownerId: 'EMP002',
+      ownerName: '李四',
+      ownerDepartment: '销售部',
+      period: '2024-Q4',
+      type: 'department',
+      priority: 'high',
+      status: 'active',
+      progress: 70,
+      startDate: '2024-10-01',
+      endDate: '2024-12-31',
+      alignsWith: ['业务增长', '市场扩张'],
+      milestones: [
+        { id: 'm4', title: '制定市场拓展计划', targetDate: '2024-10-31', status: 'completed' },
+        { id: 'm5', title: '完成团队培训', targetDate: '2024-11-30', status: 'completed' },
+      ],
       weight: 25,
-      dueDate: '2025-06-30',
-      createdAt: '2025-04-01',
-    },
-    {
-      id: '3',
-      title: '完成新员工培训',
-      description: '确保所有新入职员工完成入职培训并达到考核要求',
-      type: 'smart',
-      status: 'completed',
-      period: 'monthly',
-      owner: '王五',
-      ownerAvatar: '',
-      department: 'HR部',
-      progress: 100,
-      weight: 15,
-      dueDate: '2025-04-30',
-      createdAt: '2025-04-01',
-    },
-    {
-      id: '4',
-      title: '优化招聘流程',
-      description: '将招聘周期从45天缩短到30天',
-      type: 'smart',
-      status: 'pending',
-      period: 'quarterly',
-      owner: '赵六',
-      ownerAvatar: '',
-      department: 'HR部',
-      progress: 0,
-      weight: 20,
-      dueDate: '2025-06-30',
-      createdAt: '2025-04-01',
+      category: '市场增长',
     },
   ]);
 
-  // 目标指标数据
-  const [metrics] = useState<GoalMetric[]>([
-    { id: '1', name: '招聘完成率', target: 100, current: 70, unit: '%', trend: 'up' },
-    { id: '2', name: '用户满意度', target: 90, current: 87, unit: '%', trend: 'up' },
-    { id: '3', name: '培训完成率', target: 100, current: 100, unit: '%', trend: 'stable' },
-    { id: '4', name: '招聘周期', target: 30, current: 42, unit: '天', trend: 'down' },
-  ]);
-
-  // 映射
-  const typeMap: Record<GoalType, { label: string; color: string; icon: React.ReactNode }> = {
-    okr: { label: 'OKR', color: 'bg-blue-100 text-blue-800', icon: <Target className="h-4 w-4" /> },
-    kpi: { label: 'KPI', color: 'bg-green-100 text-green-800', icon: <BarChart3 className="h-4 w-4" /> },
-    smart: { label: 'SMART', color: 'bg-purple-100 text-purple-800', icon: <Star className="h-4 w-4" /> },
-  };
-
-  const statusMap: Record<GoalStatus, { label: string; color: string; icon: React.ReactNode }> = {
-    pending: { label: '待开始', color: 'bg-gray-100 text-gray-800', icon: <Clock className="h-4 w-4" /> },
-    in_progress: { label: '进行中', color: 'bg-blue-100 text-blue-800', icon: <TrendingUp className="h-4 w-4" /> },
-    completed: { label: '已完成', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="h-4 w-4" /> },
-    overdue: { label: '已逾期', color: 'bg-red-100 text-red-800', icon: <XCircle className="h-4 w-4" /> },
-  };
-
-  const periodMap: Record<GoalPeriod, string> = {
-    monthly: '月度',
-    quarterly: '季度',
-    yearly: '年度',
-  };
-
-  // 过滤目标
-  const filteredGoals = goals.filter(goal => {
-    const matchSearch = goal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       goal.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === 'all' || goal.status === statusFilter;
-    const matchType = typeFilter === 'all' || goal.type === typeFilter;
-    return matchSearch && matchStatus && matchType;
+  const [goalFormData, setGoalFormData] = useState({
+    objective: '',
+    type: 'individual',
+    owner: '',
+    period: '2024-Q4',
+    priority: 'medium',
+    category: '',
+    weight: '',
   });
 
-  // 计算总体进度
-  const totalProgress = goals.length > 0
-    ? Math.round(goals.reduce((sum, goal) => sum + goal.progress, 0) / goals.length)
-    : 0;
+  const stats = {
+    totalGoals: okrGoals.length,
+    activeGoals: okrGoals.filter(g => g.status === 'active').length,
+    completedGoals: okrGoals.filter(g => g.status === 'completed').length,
+    avgProgress: Math.round(
+      okrGoals.reduce((sum, g) => sum + g.progress, 0) / okrGoals.length
+    ),
+    onTrack: okrGoals.reduce((sum, g) => sum + g.keyResults.filter(kr => kr.status === 'on-track').length, 0),
+    atRisk: okrGoals.reduce((sum, g) => sum + g.keyResults.filter(kr => kr.status === 'at-risk').length, 0),
+  };
 
-  // 计算完成率
-  const completedCount = goals.filter(g => g.status === 'completed').length;
-  const completionRate = goals.length > 0 ? Math.round((completedCount / goals.length) * 100) : 0;
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      draft: { label: '草稿', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+      active: { label: '进行中', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+      completed: { label: '已完成', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+      delayed: { label: '延期', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      cancelled: { label: '已取消', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+      'on-track': { label: '正常', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+      'at-risk': { label: '风险', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      'off-track': { label: '偏离', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+    };
+    const variant = variants[status];
+    return <Badge className={variant.className}>{variant.label}</Badge>;
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    const variants: Record<string, any> = {
+      high: { label: '高', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+      medium: { label: '中', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      low: { label: '低', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+    };
+    const variant = variants[priority];
+    return <Badge className={variant.className}>{variant.label}</Badge>;
+  };
+
+  const handleCreateGoal = () => {
+    if (!goalFormData.objective || !goalFormData.owner) {
+      toast.error('请填写完整的OKR信息');
+      return;
+    }
+
+    const newGoal: OKRGoal = {
+      id: Date.now().toString(),
+      objective: goalFormData.objective,
+      keyResults: [],
+      ownerId: goalFormData.owner,
+      ownerName: '新员工',
+      ownerDepartment: '',
+      period: goalFormData.period,
+      type: goalFormData.type as any,
+      priority: goalFormData.priority as any,
+      status: 'draft',
+      progress: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+      alignsWith: [],
+      milestones: [],
+      weight: Number(goalFormData.weight) || 0,
+      category: goalFormData.category,
+    };
+
+    setOkrGoals([...okrGoals, newGoal]);
+    setShowCreateDialog(false);
+    setGoalFormData({
+      objective: '',
+      type: 'individual',
+      owner: '',
+      period: '2024-Q4',
+      priority: 'medium',
+      category: '',
+      weight: '',
+    });
+    toast.success('OKR创建成功');
+  };
+
+  const filteredGoals = okrGoals.filter(goal => {
+    const matchesDepartment = selectedDepartment === 'all' || goal.ownerDepartment === selectedDepartment;
+    const matchesPeriod = selectedPeriod === 'all' || goal.period === selectedPeriod;
+    return matchesDepartment && matchesPeriod;
+  });
 
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">目标设定</h1>
-          <p className="text-gray-600 mt-2">
-            制定和管理团队目标，跟踪进度
-            <Badge variant="secondary" className="ml-2">COE</Badge>
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            导出
-          </Button>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            创建目标
-          </Button>
-        </div>
-      </div>
-
-      {/* 功能介绍 */}
-      <Alert>
-        <Target className="h-4 w-4" />
-        <AlertDescription>
-          支持OKR、KPI、SMART等多种目标设定方法，实现目标对齐、进度跟踪和绩效评估
-        </AlertDescription>
-      </Alert>
-
-      {/* 统计概览 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">总体进度</CardTitle>
-            <Progress className="w-12 h-2" value={totalProgress} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProgress}%</div>
-            <p className="text-xs text-gray-500 mt-1">全部目标平均完成度</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">目标总数</CardTitle>
-            <Target className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{goals.length}</div>
-            <p className="text-xs text-gray-500 mt-1">本周期设定目标</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">已完成</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedCount}</div>
-            <p className="text-xs text-gray-500 mt-1">{completionRate}% 完成率</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">进行中</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{goals.filter(g => g.status === 'in_progress').length}</div>
-            <p className="text-xs text-gray-500 mt-1">正在推进中</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="my-goals">我的目标</TabsTrigger>
-          <TabsTrigger value="team-goals">团队目标</TabsTrigger>
-          <TabsTrigger value="metrics">指标追踪</TabsTrigger>
-          <TabsTrigger value="analysis">数据分析</TabsTrigger>
-        </TabsList>
-
-        {/* 我的目标 */}
-        <TabsContent value="my-goals" className="space-y-6">
-          {/* 筛选栏 */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>目标列表</CardTitle>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="搜索目标..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 w-64"
-                    />
-                  </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="状态" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全部状态</SelectItem>
-                      <SelectItem value="pending">待开始</SelectItem>
-                      <SelectItem value="in_progress">进行中</SelectItem>
-                      <SelectItem value="completed">已完成</SelectItem>
-                      <SelectItem value="overdue">已逾期</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="类型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全部类型</SelectItem>
-                      <SelectItem value="okr">OKR</SelectItem>
-                      <SelectItem value="kpi">KPI</SelectItem>
-                      <SelectItem value="smart">SMART</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* 页面标题 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                <Target className="h-7 w-7 text-white" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredGoals.map((goal) => (
-                  <Card key={goal.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-semibold">{goal.title}</h3>
-                            <Badge className={typeMap[goal.type].color}>
-                              {typeMap[goal.type].label}
-                            </Badge>
-                            <Badge className={statusMap[goal.status].color}>
-                              {statusMap[goal.status].icon}
-                              {statusMap[goal.status].label}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">{goal.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              <span>{goal.owner}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Building2 className="h-4 w-4" />
-                              <span>{goal.department}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>{periodMap[goal.period]}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>截止: {goal.dueDate}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold mb-1">{goal.progress}%</div>
-                          <div className="text-sm text-gray-500">权重: {goal.weight}%</div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">进度</span>
-                          <span className="font-medium">{goal.progress}%</span>
-                        </div>
-                        <Progress value={goal.progress} className="h-2" />
-                      </div>
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            编辑
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            详情
-                          </Button>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => toast.success('目标进度已更新')}
-                        >
-                          更新进度
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 团队目标 */}
-        <TabsContent value="team-goals">
-          <Card>
-            <CardHeader>
-              <CardTitle>团队目标</CardTitle>
-              <CardDescription>查看和管理团队目标</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>团队目标功能开发中...</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 指标追踪 */}
-        <TabsContent value="metrics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>关键指标追踪</CardTitle>
-              <CardDescription>实时监控目标关键指标</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {metrics.map((metric) => (
-                  <Card key={metric.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold text-lg mb-1">{metric.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            目标: {metric.target} {metric.unit}
-                          </div>
-                        </div>
-                        {metric.trend === 'up' && (
-                          <TrendingUp className="h-5 w-5 text-green-600" />
-                        )}
-                        {metric.trend === 'down' && (
-                          <TrendingDown className="h-5 w-5 text-red-600" />
-                        )}
-                        {metric.trend === 'stable' && (
-                          <LineChart className="h-5 w-5 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">当前值</span>
-                          <span className="text-2xl font-bold">
-                            {metric.current} <span className="text-sm font-normal">{metric.unit}</span>
-                          </span>
-                        </div>
-                        <Progress
-                          value={(metric.current / metric.target) * 100}
-                          className="h-2"
-                        />
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>0</span>
-                          <span>进度: {Math.round((metric.current / metric.target) * 100)}%</span>
-                          <span>{metric.target}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 数据分析 */}
-        <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>目标数据分析</CardTitle>
-              <CardDescription>目标完成情况和趋势分析</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>数据分析功能开发中...</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* 创建目标弹窗 */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>创建新目标</DialogTitle>
-            <DialogDescription>
-              填写目标信息，设定关键指标
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">目标标题 *</Label>
-              <Input id="title" placeholder="输入目标标题" />
-            </div>
-            <div>
-              <Label htmlFor="description">目标描述 *</Label>
-              <Textarea
-                id="description"
-                placeholder="详细描述目标内容"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="type">目标类型 *</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择类型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="okr">OKR</SelectItem>
-                    <SelectItem value="kpi">KPI</SelectItem>
-                    <SelectItem value="smart">SMART</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="period">周期 *</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择周期" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">月度</SelectItem>
-                    <SelectItem value="quarterly">季度</SelectItem>
-                    <SelectItem value="yearly">年度</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="weight">权重 (%)</Label>
-                <Input id="weight" type="number" placeholder="100" />
-              </div>
-              <div>
-                <Label htmlFor="dueDate">截止日期 *</Label>
-                <Input id="dueDate" type="date" />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="owner">负责人 *</Label>
-              <Input id="owner" placeholder="选择负责人" />
-            </div>
+              目标设定（OKR/KPI）
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              科学的目标管理体系，助力团队高效达成目标
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              导出报告
             </Button>
-            <Button onClick={() => {
-              toast.success('目标创建成功！');
-              setDialogOpen(false);
-            }}>
-              <Save className="mr-2 h-4 w-4" />
-              保存
+            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Plus className="h-4 w-4 mr-2" />
+              创建OKR
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">OKR总数</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalGoals}</div>
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <Target className="h-3 w-3 mr-1" />
+                个
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">进行中</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.activeGoals}</div>
+              <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 mt-1">
+                <Clock className="h-3 w-3 mr-1" />
+                个
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">已完成</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completedGoals}</div>
+              <div className="flex items-center text-xs text-green-600 dark:text-green-400 mt-1">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                个
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">平均进度</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.avgProgress}%</div>
+              <div className="flex items-center text-xs text-purple-600 dark:text-purple-400 mt-1">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                整体进度
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">正常</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.onTrack}</div>
+              <div className="flex items-center text-xs text-green-600 dark:text-green-400 mt-1">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                KR
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">风险</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.atRisk}</div>
+              <div className="flex items-center text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                KR
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 功能Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <TabsTrigger value="okr" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              OKR管理
+            </TabsTrigger>
+            <TabsTrigger value="tracking" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              进度跟踪
+            </TabsTrigger>
+            <TabsTrigger value="alignment" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              目标对齐
+            </TabsTrigger>
+          </TabsList>
+
+          {/* OKR管理 */}
+          <TabsContent value="okr" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>OKR列表</CardTitle>
+                    <CardDescription>查看和管理所有目标</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">全部部门</SelectItem>
+                        <SelectItem value="产品部">产品部</SelectItem>
+                        <SelectItem value="销售部">销售部</SelectItem>
+                        <SelectItem value="技术部">技术部</SelectItem>
+                        <SelectItem value="市场部">市场部</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2024-Q4">2024 Q4</SelectItem>
+                        <SelectItem value="2024-Q3">2024 Q3</SelectItem>
+                        <SelectItem value="2024-Q2">2024 Q2</SelectItem>
+                        <SelectItem value="2024-Q1">2024 Q1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {filteredGoals.map((goal) => (
+                    <Card key={goal.id} className="hover:shadow-md transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {goal.objective}
+                              </h3>
+                              {getStatusBadge(goal.status)}
+                              {getPriorityBadge(goal.priority)}
+                              <Badge variant="outline">{goal.period}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>{goal.ownerName}</span>
+                                <span>·</span>
+                                <span>{goal.ownerDepartment}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Flag className="h-4 w-4" />
+                                <span>{goal.category}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                <span>{goal.endDate}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              查看
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              编辑
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">总体进度</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{goal.progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                goal.progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                              }`}
+                              style={{ width: `${goal.progress}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">关键结果（KR）</h4>
+                          <div className="space-y-2">
+                            {goal.keyResults.map((kr, idx) => (
+                              <div key={kr.id} className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm font-medium text-gray-900 dark:text-white">{kr.title}</span>
+                                      {getStatusBadge(kr.status)}
+                                    </div>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">{kr.description}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className={`text-lg font-bold ${
+                                      (kr.currentValue / kr.targetValue) >= 1 ? 'text-green-600 dark:text-green-400' :
+                                      (kr.currentValue / kr.targetValue) >= 0.8 ? 'text-blue-600 dark:text-blue-400' :
+                                      'text-yellow-600 dark:text-yellow-400'
+                                    }`}>
+                                      {kr.currentValue} / {kr.targetValue} {kr.unit}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">{kr.progress}%</div>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full ${
+                                      kr.status === 'on-track' ? 'bg-green-500' :
+                                      kr.status === 'at-risk' ? 'bg-yellow-500' :
+                                      'bg-red-500'
+                                    }`}
+                                    style={{ width: `${kr.progress}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {goal.alignsWith.length > 0 && (
+                          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                            <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">对齐目标</div>
+                            <div className="flex flex-wrap gap-1">
+                              {goal.alignsWith.map((item, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                                  {item}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 进度跟踪 */}
+          <TabsContent value="tracking" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>进度跟踪概览</CardTitle>
+                <CardDescription>所有KR的实时进度和状态</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border dark:border-gray-700">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>目标</TableHead>
+                        <TableHead>负责人</TableHead>
+                        <TableHead>关键结果</TableHead>
+                        <TableHead>当前值</TableHead>
+                        <TableHead>目标值</TableHead>
+                        <TableHead>进度</TableHead>
+                        <TableHead>状态</TableHead>
+                        <TableHead>截止日期</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredGoals.flatMap(goal =>
+                        goal.keyResults.map(kr => ({
+                          ...kr,
+                          objective: goal.objective,
+                          ownerName: goal.ownerName,
+                          ownerDepartment: goal.ownerDepartment,
+                        }))
+                      ).map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate font-medium">{item.objective}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-xs">
+                                  {item.ownerName.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm">{item.ownerName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <div className="text-sm">{item.title}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{item.description}</div>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {item.currentValue} {item.unit}
+                          </TableCell>
+                          <TableCell className="font-medium text-gray-600 dark:text-gray-400">
+                            {item.targetValue} {item.unit}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full ${
+                                    item.progress >= 80 ? 'bg-green-500' :
+                                    item.progress >= 50 ? 'bg-blue-500' :
+                                    'bg-yellow-500'
+                                  }`}
+                                  style={{ width: `${item.progress}%` }}
+                                />
+                              </div>
+                              <span className="text-sm">{item.progress}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(item.status)}</TableCell>
+                          <TableCell>{item.dueDate}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 目标对齐 */}
+          <TabsContent value="alignment" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>目标对齐视图</CardTitle>
+                <CardDescription>查看公司目标如何向下分解和对齐</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200 dark:border-blue-900">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                        <Award className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">公司战略目标</h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-3">2024年实现营收翻倍，用户数突破200万</p>
+                        <div className="flex items-center gap-4">
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">公司级</Badge>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">权重: 100%</span>
+                          <span className="text-sm text-green-600 dark:text-green-400">进度: 85%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {filteredGoals.map((goal) => (
+                    <Card key={goal.id} className="ml-8">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <Flag className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold text-gray-900 dark:text-white">{goal.objective}</h4>
+                              <Badge variant="outline">{goal.ownerDepartment}</Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              负责人: {goal.ownerName} | 权重: {goal.weight}%
+                            </p>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full bg-blue-500"
+                                style={{ width: `${goal.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* 创建OKR对话框 */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>创建新的OKR</DialogTitle>
+              <DialogDescription>
+                设定清晰的目标和可衡量的关键结果
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="objective">目标（Objective） *</Label>
+                <Textarea
+                  id="objective"
+                  value={goalFormData.objective}
+                  onChange={(e) => setGoalFormData({ ...goalFormData, objective: e.target.value })}
+                  placeholder="例如：提升产品用户体验，增加用户粘性"
+                  rows={2}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  目标应该是定性、鼓舞人心、有时间限制的
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">OKR类型</Label>
+                <Select value={goalFormData.type} onValueChange={(v) => setGoalFormData({ ...goalFormData, type: v })}>
+                  <SelectTrigger id="type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">个人OKR</SelectItem>
+                    <SelectItem value="department">部门OKR</SelectItem>
+                    <SelectItem value="company">公司OKR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="owner">负责人 *</Label>
+                <Input
+                  id="owner"
+                  value={goalFormData.owner}
+                  onChange={(e) => setGoalFormData({ ...goalFormData, owner: e.target.value })}
+                  placeholder="选择负责人"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="period">周期</Label>
+                <Select value={goalFormData.period} onValueChange={(v) => setGoalFormData({ ...goalFormData, period: v })}>
+                  <SelectTrigger id="period">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2024-Q4">2024 Q4</SelectItem>
+                    <SelectItem value="2025-Q1">2025 Q1</SelectItem>
+                    <SelectItem value="2025-Q2">2025 Q2</SelectItem>
+                    <SelectItem value="2025-Q3">2025 Q3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="priority">优先级</Label>
+                <Select value={goalFormData.priority} onValueChange={(v) => setGoalFormData({ ...goalFormData, priority: v })}>
+                  <SelectTrigger id="priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">高</SelectItem>
+                    <SelectItem value="medium">中</SelectItem>
+                    <SelectItem value="low">低</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">目标类别</Label>
+                <Input
+                  id="category"
+                  value={goalFormData.category}
+                  onChange={(e) => setGoalFormData({ ...goalFormData, category: e.target.value })}
+                  placeholder="例如：产品创新、市场增长"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weight">权重（%）</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  value={goalFormData.weight}
+                  onChange={(e) => setGoalFormData({ ...goalFormData, weight: e.target.value })}
+                  placeholder="0-100"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>
+              <Button onClick={handleCreateGoal}>创建OKR</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

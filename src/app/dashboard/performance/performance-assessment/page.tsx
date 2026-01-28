@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,14 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
@@ -31,528 +24,666 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Target,
-  Plus,
-  Edit,
   CheckCircle,
   Clock,
-  TrendingUp,
-  Star,
+  AlertCircle,
+  Plus,
+  Edit,
+  Eye,
   Calendar,
   User,
-  Building2,
-  Filter,
-  Search,
-  Download,
-  Trash2,
-  Send,
-  FileText,
-  BarChart3,
-  Award,
+  Star,
   MessageSquare,
-  Save,
-  Eye,
+  Send,
+  Download,
+  Filter,
+  TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 类型定义
-type AssessmentStatus = 'pending' | 'self_review' | 'manager_review' | 'completed';
-type Rating = 'excellent' | 'good' | 'satisfactory' | 'needs_improvement';
-
-interface Assessment {
+interface PerformanceAssessment {
   id: string;
   employeeId: string;
   employeeName: string;
   employeeAvatar?: string;
   department: string;
   position: string;
+  assessorId: string;
+  assessorName: string;
   period: string;
-  status: AssessmentStatus;
-  selfScore?: number;
-  managerScore?: number;
-  finalScore?: number;
-  selfReview?: string;
-  managerReview?: string;
-  managerComment?: string;
-  createdAt: string;
-  completedAt?: string;
+  type: 'self' | 'manager' | 'peer' | '360';
+  status: 'pending' | 'in-progress' | 'submitted' | 'reviewing' | 'completed';
+  submissionDate?: string;
+  score?: number;
+  rating?: 'S' | 'A' | 'B' | 'C' | 'D';
+  categories: AssessmentCategory[];
+  feedback: string;
+  goals: AssessmentGoal[];
 }
 
-interface AssessmentCriteria {
+interface AssessmentCategory {
   id: string;
   name: string;
-  description: string;
   weight: number;
-  score?: number;
+  score: number;
+  maxScore: number;
+  items: AssessmentItem[];
+}
+
+interface AssessmentItem {
+  id: string;
+  title: string;
+  description: string;
+  score: number;
+  maxScore: number;
+  comment?: string;
+}
+
+interface AssessmentGoal {
+  id: string;
+  title: string;
+  targetScore: number;
+  actualScore: number;
+  completionRate: number;
+  weight: number;
 }
 
 export default function PerformanceAssessmentPage() {
-  const [activeTab, setActiveTab] = useState('todo');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-  const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
+  const [activeTab, setActiveTab] = useState('assessments');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
-  // 绩效评估数据
-  const [assessments] = useState<Assessment[]>([
+  const [assessments, setAssessments] = useState<PerformanceAssessment[]>([
     {
       id: '1',
-      employeeId: '1',
+      employeeId: 'EMP001',
       employeeName: '张三',
-      employeeAvatar: '',
-      department: '技术部',
-      position: '高级工程师',
-      period: '2025 Q1',
-      status: 'manager_review',
-      selfScore: 85,
-      managerScore: 90,
-      createdAt: '2025-04-01',
+      department: '产品部',
+      position: '产品经理',
+      assessorId: 'M001',
+      assessorName: '李总',
+      period: '2024-Q4',
+      type: 'manager',
+      status: 'in-progress',
+      score: 85,
+      rating: 'A',
+      categories: [
+        {
+          id: 'c1',
+          name: '工作业绩',
+          weight: 40,
+          score: 90,
+          maxScore: 100,
+          items: [
+            { id: 'i1', title: '目标达成', description: '季度目标的完成情况', score: 95, maxScore: 100 },
+            { id: 'i2', title: '工作质量', description: '工作成果的质量和准确性', score: 88, maxScore: 100 },
+            { id: 'i3', title: '工作效率', description: '工作效率和资源利用', score: 87, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c2',
+          name: '能力素质',
+          weight: 30,
+          score: 82,
+          maxScore: 100,
+          items: [
+            { id: 'i4', title: '专业能力', description: '专业知识和技能水平', score: 85, maxScore: 100 },
+            { id: 'i5', title: '学习能力', description: '学习新知识的能力', score: 80, maxScore: 100 },
+            { id: 'i6', title: '创新能力', description: '创新思维和解决问题能力', score: 81, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c3',
+          name: '工作态度',
+          weight: 20,
+          score: 88,
+          maxScore: 100,
+          items: [
+            { id: 'i7', title: '责任心', description: '对工作的责任心', score: 90, maxScore: 100 },
+            { id: 'i8', title: '主动性', description: '工作的主动性和积极性', score: 86, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c4',
+          name: '团队协作',
+          weight: 10,
+          score: 85,
+          maxScore: 100,
+          items: [
+            { id: 'i9', title: '沟通协作', description: '团队沟通和协作能力', score: 85, maxScore: 100 },
+          ],
+        },
+      ],
+      feedback: '本季度工作表现优秀，特别是在产品创新方面有突出表现。建议进一步提升项目管理能力。',
+      goals: [
+        {
+          id: 'g1',
+          title: '完成新功能开发',
+          targetScore: 100,
+          actualScore: 95,
+          completionRate: 95,
+          weight: 50,
+        },
+        {
+          id: 'g2',
+          title: '提升用户满意度',
+          targetScore: 90,
+          actualScore: 88,
+          completionRate: 98,
+          weight: 30,
+        },
+        {
+          id: 'g3',
+          title: '完成团队培训',
+          targetScore: 80,
+          actualScore: 85,
+          completionRate: 106,
+          weight: 20,
+        },
+      ],
     },
     {
       id: '2',
-      employeeId: '2',
+      employeeId: 'EMP002',
       employeeName: '李四',
-      employeeAvatar: '',
-      department: '产品部',
-      position: '产品经理',
-      period: '2025 Q1',
-      status: 'self_review',
-      selfScore: 78,
-      createdAt: '2025-04-01',
+      department: '销售部',
+      position: '销售经理',
+      assessorId: 'M002',
+      assessorName: '王总',
+      period: '2024-Q4',
+      type: 'manager',
+      status: 'completed',
+      submissionDate: '2024-12-15',
+      score: 92,
+      rating: 'S',
+      categories: [
+        {
+          id: 'c5',
+          name: '工作业绩',
+          weight: 40,
+          score: 95,
+          maxScore: 100,
+          items: [
+            { id: 'i10', title: '销售业绩', description: '销售目标和业绩完成', score: 98, maxScore: 100 },
+            { id: 'i11', title: '客户开发', description: '新客户开发数量', score: 92, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c6',
+          name: '能力素质',
+          weight: 30,
+          score: 90,
+          maxScore: 100,
+          items: [
+            { id: 'i12', title: '销售技巧', description: '销售技巧和谈判能力', score: 92, maxScore: 100 },
+            { id: 'i13', title: '客户关系', description: '客户关系维护能力', score: 88, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c7',
+          name: '工作态度',
+          weight: 20,
+          score: 88,
+          maxScore: 100,
+          items: [
+            { id: 'i14', title: '积极性', description: '工作积极性和主动性', score: 90, maxScore: 100 },
+            { id: 'i15', title: '抗压能力', description: '应对压力的能力', score: 86, maxScore: 100 },
+          ],
+        },
+        {
+          id: 'c8',
+          name: '团队协作',
+          weight: 10,
+          score: 90,
+          maxScore: 100,
+          items: [
+            { id: 'i16', title: '团队协作', description: '团队合作精神', score: 90, maxScore: 100 },
+          ],
+        },
+      ],
+      feedback: '业绩突出，超额完成销售目标。建议在战略思维方面进一步锻炼。',
+      goals: [
+        {
+          id: 'g4',
+          title: '完成销售目标',
+          targetScore: 100,
+          actualScore: 110,
+          completionRate: 110,
+          weight: 60,
+        },
+        {
+          id: 'g5',
+          title: '拓展客户数量',
+          targetScore: 80,
+          actualScore: 85,
+          completionRate: 106,
+          weight: 40,
+        },
+      ],
     },
     {
       id: '3',
-      employeeId: '3',
+      employeeId: 'EMP003',
       employeeName: '王五',
-      employeeAvatar: '',
-      department: '销售部',
-      position: '销售经理',
-      period: '2025 Q1',
-      status: 'completed',
-      selfScore: 92,
-      managerScore: 95,
-      finalScore: 94,
-      selfReview: '本季度完成了销售目标，团队业绩提升明显',
-      managerReview: '业绩突出，团队管理能力强',
-      managerComment: '继续保持，可考虑晋升',
-      createdAt: '2025-04-01',
-      completedAt: '2025-04-15',
-    },
-    {
-      id: '4',
-      employeeId: '4',
-      employeeName: '赵六',
-      employeeAvatar: '',
-      department: '市场部',
-      position: '市场专员',
-      period: '2025 Q1',
+      department: '技术部',
+      position: '高级工程师',
+      assessorId: 'M003',
+      assessorName: '张总',
+      period: '2024-Q4',
+      type: 'self',
       status: 'pending',
-      createdAt: '2025-04-01',
+      score: undefined,
+      categories: [],
+      feedback: '',
+      goals: [],
     },
   ]);
 
-  // 评估标准
-  const [criteria] = useState<AssessmentCriteria[]>([
-    { id: '1', name: '工作业绩', description: '完成工作任务的数量和质量', weight: 40 },
-    { id: '2', name: '工作能力', description: '专业知识和技能水平', weight: 25 },
-    { id: '3', name: '工作态度', description: '责任心、主动性、团队合作', weight: 20 },
-    { id: '4', name: '发展潜力', description: '学习能力、创新精神', weight: 15 },
-  ]);
-
-  // 映射
-  const statusMap: Record<AssessmentStatus, { label: string; color: string; icon: React.ReactNode }> = {
-    pending: { label: '待自评', color: 'bg-gray-100 text-gray-800', icon: <Clock className="h-4 w-4" /> },
-    self_review: { label: '自评中', color: 'bg-blue-100 text-blue-800', icon: <Edit className="h-4 w-4" /> },
-    manager_review: { label: '待评估', color: 'bg-yellow-100 text-yellow-800', icon: <Star className="h-4 w-4" /> },
-    completed: { label: '已完成', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="h-4 w-4" /> },
+  const stats = {
+    totalAssessments: assessments.length,
+    pending: assessments.filter(a => a.status === 'pending').length,
+    inProgress: assessments.filter(a => a.status === 'in-progress').length,
+    completed: assessments.filter(a => a.status === 'completed').length,
+    avgScore: (() => {
+      const scoredAssessments = assessments.filter(a => a.score !== undefined);
+      return scoredAssessments.length > 0
+        ? scoredAssessments.reduce((sum, a) => sum + (a.score || 0), 0) / scoredAssessments.length
+        : 0;
+    })(),
+    highPerformers: assessments.filter(a => a.rating === 'S' || a.rating === 'A').length,
   };
 
-  const ratingMap: Record<Rating, { label: string; score: number; color: string }> = {
-    excellent: { label: '优秀', score: 95, color: 'bg-green-500' },
-    good: { label: '良好', score: 85, color: 'bg-blue-500' },
-    satisfactory: { label: '合格', score: 70, color: 'bg-yellow-500' },
-    needs_improvement: { label: '需改进', score: 55, color: 'bg-red-500' },
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      pending: { label: '待开始', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+      'in-progress': { label: '进行中', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+      submitted: { label: '已提交', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      reviewing: { label: '审核中', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
+      completed: { label: '已完成', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+    };
+    const variant = variants[status];
+    return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 
-  // 过滤评估
+  const getRatingBadge = (rating?: string) => {
+    if (!rating) return <span className="text-gray-400">-</span>;
+    const variants: Record<string, any> = {
+      S: { label: 'S', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+      A: { label: 'A', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+      B: { label: 'B', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+      C: { label: 'C', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+      D: { label: 'D', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+    };
+    const variant = variants[rating];
+    return <Badge className={variant.className}>{variant.label}</Badge>;
+  };
+
+  const getScoreColor = (score: number, maxScore: number) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 90) return 'text-green-600 dark:text-green-400';
+    if (percentage >= 80) return 'text-blue-600 dark:text-blue-400';
+    if (percentage >= 70) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+
   const filteredAssessments = assessments.filter(assessment => {
-    const matchSearch = assessment.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       assessment.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === 'all' || assessment.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchesDepartment = selectedDepartment === 'all' || assessment.department === selectedDepartment;
+    const matchesStatus = selectedStatus === 'all' || assessment.status === selectedStatus;
+    return matchesDepartment && matchesStatus;
   });
 
-  // 统计
-  const todoCount = assessments.filter(a => a.status === 'pending' || a.status === 'self_review').length;
-  const reviewCount = assessments.filter(a => a.status === 'manager_review').length;
-  const completedCount = assessments.filter(a => a.status === 'completed').length;
-
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">绩效评估</h1>
-          <p className="text-gray-600 mt-2">
-            进行绩效评估，管理评估流程
-            <Badge variant="secondary" className="ml-2">COE</Badge>
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            导出报告
-          </Button>
-          <Button onClick={() => toast.info('评估周期已启动')}>
-            <Plus className="mr-2 h-4 w-4" />
-            启动评估周期
-          </Button>
-        </div>
-      </div>
-
-      {/* 功能介绍 */}
-      <Alert>
-        <Target className="h-4 w-4" />
-        <AlertDescription>
-          支持自评、经理评估、绩效面谈、最终评分等完整评估流程，可自定义评估标准和权重
-        </AlertDescription>
-      </Alert>
-
-      {/* 统计概览 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">待处理</CardTitle>
-            <Clock className="h-4 w-4 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todoCount}</div>
-            <p className="text-xs text-gray-500 mt-1">等待自评</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">待评估</CardTitle>
-            <Star className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reviewCount}</div>
-            <p className="text-xs text-gray-500 mt-1">等待经理评估</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">已完成</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedCount}</div>
-            <p className="text-xs text-gray-500 mt-1">评估完成</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">完成率</CardTitle>
-            <BarChart3 className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assessments.length > 0 ? Math.round((completedCount / assessments.length) * 100) : 0}%
-            </div>
-            <p className="text-xs text-gray-500 mt-1">总体完成率</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="todo">待处理 ({todoCount})</TabsTrigger>
-          <TabsTrigger value="review">待评估 ({reviewCount})</TabsTrigger>
-          <TabsTrigger value="completed">已完成 ({completedCount})</TabsTrigger>
-          <TabsTrigger value="criteria">评估标准</TabsTrigger>
-        </TabsList>
-
-        {/* 待处理 */}
-        <TabsContent value="todo">
-          <Card>
-            <CardHeader>
-              <CardTitle>待处理评估</CardTitle>
-              <CardDescription>员工尚未开始自评的评估</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>员工</TableHead>
-                    <TableHead>部门</TableHead>
-                    <TableHead>职位</TableHead>
-                    <TableHead>周期</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>创建时间</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assessments.filter(a => a.status === 'pending').map((assessment) => (
-                    <TableRow key={assessment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{assessment.employeeName.slice(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{assessment.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{assessment.department}</TableCell>
-                      <TableCell>{assessment.position}</TableCell>
-                      <TableCell>{assessment.period}</TableCell>
-                      <TableCell>
-                        <Badge className={statusMap[assessment.status].color}>
-                          {statusMap[assessment.status].icon}
-                          {statusMap[assessment.status].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{assessment.createdAt}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Send className="h-4 w-4 mr-1" />
-                          提醒
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 待评估 */}
-        <TabsContent value="review">
-          <Card>
-            <CardHeader>
-              <CardTitle>待评估列表</CardTitle>
-              <CardDescription>等待您进行经理评估的员工</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>员工</TableHead>
-                    <TableHead>部门</TableHead>
-                    <TableHead>职位</TableHead>
-                    <TableHead>自评分数</TableHead>
-                    <TableHead>周期</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assessments.filter(a => a.status === 'manager_review').map((assessment) => (
-                    <TableRow key={assessment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{assessment.employeeName.slice(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{assessment.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{assessment.department}</TableCell>
-                      <TableCell>{assessment.position}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{assessment.selfScore}</span>
-                          <span className="text-sm text-gray-500">分</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{assessment.period}</TableCell>
-                      <TableCell>
-                        <Button
-                          onClick={() => {
-                            setSelectedAssessment(assessment);
-                            setReviewDialogOpen(true);
-                          }}
-                        >
-                          <Star className="h-4 w-4 mr-1" />
-                          开始评估
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 已完成 */}
-        <TabsContent value="completed">
-          <Card>
-            <CardHeader>
-              <CardTitle>已完成评估</CardTitle>
-              <CardDescription>查看所有已完成绩效评估</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>员工</TableHead>
-                    <TableHead>部门</TableHead>
-                    <TableHead>自评</TableHead>
-                    <TableHead>经理评</TableHead>
-                    <TableHead>最终分</TableHead>
-                    <TableHead>周期</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assessments.filter(a => a.status === 'completed').map((assessment) => (
-                    <TableRow key={assessment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{assessment.employeeName.slice(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{assessment.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{assessment.department}</TableCell>
-                      <TableCell>{assessment.selfScore}</TableCell>
-                      <TableCell>{assessment.managerScore}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-blue-100 text-blue-800">
-                          <Award className="h-4 w-4 mr-1" />
-                          {assessment.finalScore}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{assessment.period}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          详情
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 评估标准 */}
-        <TabsContent value="criteria">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>评估标准</CardTitle>
-                  <CardDescription>自定义绩效评估标准和权重</CardDescription>
-                </div>
-                <Button>
-                  <Plus className="h-4 w-4 mr-1" />
-                  添加标准
-                </Button>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* 页面标题 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                <Target className="h-7 w-7 text-white" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {criteria.map((criterion) => (
-                  <Card key={criterion.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold">{criterion.name}</h3>
-                            <Badge variant="outline">{criterion.weight}%</Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">{criterion.description}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* 评估弹窗 */}
-      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>绩效评估</DialogTitle>
-            <DialogDescription>
-              {selectedAssessment && `${selectedAssessment.employeeName} - ${selectedAssessment.period}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            {/* 自评信息 */}
-            {selectedAssessment?.selfReview && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium">员工自评</span>
-                </div>
-                <p className="text-sm text-gray-700">{selectedAssessment.selfReview}</p>
-                <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
-                  <span>自评分数:</span>
-                  <Badge className="bg-blue-100 text-blue-800">{selectedAssessment.selfScore}分</Badge>
-                </div>
-              </div>
-            )}
-
-            {/* 评分 */}
-            <div>
-              <Label>经理评分 (0-100)</Label>
-              <Input type="number" min="0" max="100" placeholder="输入评分" />
-            </div>
-
-            {/* 评价 */}
-            <div>
-              <Label>评价意见</Label>
-              <Textarea
-                placeholder="请输入评价意见..."
-                rows={4}
-              />
-            </div>
-
-            {/* 评语 */}
-            <div>
-              <Label>经理评语</Label>
-              <Textarea
-                placeholder="请输入对员工的评语和建议..."
-                rows={4}
-              />
-            </div>
+              绩效评估
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              360度绩效评估，全面客观评价员工表现
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>
-              取消
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              导出报告
             </Button>
-            <Button onClick={() => {
-              toast.success('评估已提交！');
-              setReviewDialogOpen(false);
-            }}>
-              <Save className="mr-2 h-4 w-4" />
-              提交评估
+            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Plus className="h-4 w-4 mr-2" />
+              创建评估
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">评估总数</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalAssessments}</div>
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <Target className="h-3 w-3 mr-1" />
+                份
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">待开始</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.pending}</div>
+              <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 mt-1">
+                <Clock className="h-3 w-3 mr-1" />
+                份
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">进行中</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.inProgress}</div>
+              <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 mt-1">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                份
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">已完成</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</div>
+              <div className="flex items-center text-xs text-green-600 dark:text-green-400 mt-1">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                份
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">平均分</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {stats.avgScore.toFixed(1)}
+              </div>
+              <div className="flex items-center text-xs text-purple-600 dark:text-purple-400 mt-1">
+                <Star className="h-3 w-3 mr-1" />
+                分
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">优秀</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.highPerformers}</div>
+              <div className="flex items-center text-xs text-orange-600 dark:text-orange-400 mt-1">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                人
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 功能Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <TabsTrigger value="assessments" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              评估列表
+            </TabsTrigger>
+            <TabsTrigger value="my-assessments" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              我的评估
+            </TabsTrigger>
+            <TabsTrigger value="analysis" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              分析报告
+            </TabsTrigger>
+          </TabsList>
+
+          {/* 评估列表 */}
+          <TabsContent value="assessments" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>绩效评估列表</CardTitle>
+                    <CardDescription>查看和管理所有员工绩效评估</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">全部部门</SelectItem>
+                        <SelectItem value="产品部">产品部</SelectItem>
+                        <SelectItem value="销售部">销售部</SelectItem>
+                        <SelectItem value="技术部">技术部</SelectItem>
+                        <SelectItem value="市场部">市场部</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">全部状态</SelectItem>
+                        <SelectItem value="pending">待开始</SelectItem>
+                        <SelectItem value="in-progress">进行中</SelectItem>
+                        <SelectItem value="completed">已完成</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {filteredAssessments.map((assessment) => (
+                    <Card key={assessment.id} className="hover:shadow-md transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
+                                {assessment.employeeName.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                  {assessment.employeeName}
+                                </h3>
+                                {getStatusBadge(assessment.status)}
+                                {getRatingBadge(assessment.rating)}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <span>{assessment.department}</span>
+                                <span>·</span>
+                                <span>{assessment.position}</span>
+                                <span>·</span>
+                                <span>{assessment.period}</span>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                评估人: {assessment.assessorName}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              查看
+                            </Button>
+                            {assessment.status === 'pending' || assessment.status === 'in-progress' ? (
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                <Edit className="h-4 w-4 mr-1" />
+                                开始评估
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm">
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                反馈
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      {assessment.categories.length > 0 && (
+                        <CardContent>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            {assessment.categories.map((category) => (
+                              <div key={category.id} className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                  {category.name} ({category.weight}%)
+                                </div>
+                                <div className={`text-lg font-bold ${getScoreColor(category.score, category.maxScore)}`}>
+                                  {category.score} / {category.maxScore}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            {assessment.score !== undefined && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">综合评分:</span>
+                                <span className={`text-2xl font-bold ${getScoreColor(assessment.score, 100)}`}>
+                                  {assessment.score}
+                                </span>
+                              </div>
+                            )}
+                            {assessment.submissionDate && (
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                提交日期: {assessment.submissionDate}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 我的评估 */}
+          <TabsContent value="my-assessments" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>我的评估</CardTitle>
+                <CardDescription>查看我的绩效评估情况</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Target className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    当前没有待处理的评估
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    当有新的绩效评估时，会在这里显示
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 分析报告 */}
+          <TabsContent value="analysis" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>部门绩效对比</CardTitle>
+                  <CardDescription>各部门平均绩效评分对比</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {['产品部', '销售部', '技术部', '市场部'].map((dept, idx) => {
+                      const deptAssessments = assessments.filter(a => a.department === dept && a.score !== undefined);
+                      const avgScore = deptAssessments.length > 0
+                        ? deptAssessments.reduce((sum, a) => sum + (a.score || 0), 0) / deptAssessments.length
+                        : 0;
+                      return (
+                        <div key={idx}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{dept}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {avgScore.toFixed(1)}分
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                avgScore >= 90 ? 'bg-green-500' :
+                                avgScore >= 80 ? 'bg-blue-500' :
+                                avgScore >= 70 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ width: `${avgScore}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>等级分布</CardTitle>
+                  <CardDescription>绩效评估等级统计</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {['S', 'A', 'B', 'C', 'D'].map((rating) => {
+                      const count = assessments.filter(a => a.rating === rating).length;
+                      const percentage = assessments.length > 0 ? (count / assessments.length) * 100 : 0;
+                      return (
+                        <div key={rating} className="flex items-center gap-3">
+                          <Badge className="w-8 flex justify-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {rating}
+                          </Badge>
+                          <div className="flex-1">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full bg-blue-500"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                            {count}人
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400 w-12 text-right">
+                            {percentage.toFixed(0)}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
