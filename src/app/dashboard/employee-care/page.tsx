@@ -525,98 +525,6 @@ export default function EmployeeCarePage() {
           </Card>
         </TabsContent>
 
-      {/* 新增关怀弹窗 */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>新增关怀记录</DialogTitle>
-            <DialogDescription>
-              记录员工关怀信息
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="employee">选择员工 *</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择员工" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">张三 - 技术部</SelectItem>
-                  <SelectItem value="2">李四 - 技术部</SelectItem>
-                  <SelectItem value="3">王五 - 销售部</SelectItem>
-                  <SelectItem value="4">赵六 - 销售部</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="type">关怀类型 *</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择类型" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="birthday">生日关怀</SelectItem>
-                  <SelectItem value="wedding">结婚祝福</SelectItem>
-                  <SelectItem value="sick">生病探望</SelectItem>
-                  <SelectItem value="childbirth">生育慰问</SelectItem>
-                  <SelectItem value="family_bereavement">家庭丧事</SelectItem>
-                  <SelectItem value="onboarding">入职关怀</SelectItem>
-                  <SelectItem value="resignation">离职关怀</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="date">日期 *</Label>
-                <Input id="date" type="date" />
-              </div>
-              <div>
-                <Label htmlFor="priority">优先级 *</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择优先级" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">高</SelectItem>
-                    <SelectItem value="medium">中</SelectItem>
-                    <SelectItem value="low">低</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="description">描述 *</Label>
-              <Textarea
-                id="description"
-                placeholder="描述关怀事项"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="action">处理措施</Label>
-              <Textarea
-                id="action"
-                placeholder="记录已采取或计划采取的措施"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={() => {
-              toast.success('关怀记录已添加！');
-              setDialogOpen(false);
-            }}>
-              <Save className="mr-2 h-4 w-4" />
-              保存
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* 智能提醒 Tab */}
       <TabsContent value="smart-reminders" className="space-y-6">
         <Card>
@@ -1040,6 +948,98 @@ export default function EmployeeCarePage() {
         </Card>
       </TabsContent>
       </Tabs>
+
+      {/* 新增关怀弹窗 */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>新增关怀记录</DialogTitle>
+            <DialogDescription>
+              记录员工关怀信息
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="employee">选择员工 *</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择员工" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">张三 - 技术部</SelectItem>
+                  <SelectItem value="2">李四 - 技术部</SelectItem>
+                  <SelectItem value="3">王五 - 销售部</SelectItem>
+                  <SelectItem value="4">赵六 - 销售部</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="type">关怀类型 *</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="birthday">生日关怀</SelectItem>
+                  <SelectItem value="wedding">结婚祝福</SelectItem>
+                  <SelectItem value="sick">生病探望</SelectItem>
+                  <SelectItem value="childbirth">生育慰问</SelectItem>
+                  <SelectItem value="family_bereavement">家庭丧事</SelectItem>
+                  <SelectItem value="onboarding">入职关怀</SelectItem>
+                  <SelectItem value="resignation">离职关怀</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="date">日期 *</Label>
+                <Input id="date" type="date" />
+              </div>
+              <div>
+                <Label htmlFor="priority">优先级 *</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择优先级" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">高</SelectItem>
+                    <SelectItem value="medium">中</SelectItem>
+                    <SelectItem value="low">低</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="description">描述 *</Label>
+              <Textarea
+                id="description"
+                placeholder="描述关怀事项"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="action">处理措施</Label>
+              <Textarea
+                id="action"
+                placeholder="记录已采取或计划采取的措施"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={() => {
+              toast.success('关怀记录已添加！');
+              setDialogOpen(false);
+            }}>
+              <Save className="mr-2 h-4 w-4" />
+              保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
