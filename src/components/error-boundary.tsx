@@ -3,7 +3,7 @@
 import { Component, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -25,6 +25,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // 过滤掉浏览器扩展相关的错误
+    const errorMessage = error?.message || '';
+    if (errorMessage.includes('chrome-extension') ||
+        errorMessage.includes('moz-extension') ||
+        errorMessage.includes('runtime.lastError')) {
+      return { hasError: false, error: null };
+    }
+
     return {
       hasError: true,
       error,
@@ -32,6 +40,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
+    // 过滤掉浏览器扩展相关的错误
+    const errorMessage = error?.message || '';
+    if (errorMessage.includes('chrome-extension') ||
+        errorMessage.includes('moz-extension') ||
+        errorMessage.includes('runtime.lastError')) {
+      console.warn('[忽略浏览器扩展错误]', error);
+      return;
+    }
+
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
@@ -70,12 +87,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => window.location.href = '/dashboard'}
+                  onClick={() => window.location.href = '/'}
                   className="flex-1"
                 >
+                  <Home className="h-4 w-4 mr-2" />
                   返回首页
                 </Button>
               </div>
+              <p className="text-xs text-center text-gray-500">
+                如果问题持续存在，请联系技术支持
+              </p>
             </CardContent>
           </Card>
         </div>

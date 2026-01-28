@@ -133,6 +133,13 @@ export default function RootLayout({
                     return false;
                   }
 
+                  // 忽略 React hydration 警告
+                  if (errorMessage.includes('Warning: Text content does not match') ||
+                      errorMessage.includes('Warning: Did not expect server HTML')) {
+                    console.warn('[Hydration 警告]', errorMessage);
+                    return false;
+                  }
+
                   console.error('[全局错误]', event.error || errorMessage);
                   return true;
                 }, true);

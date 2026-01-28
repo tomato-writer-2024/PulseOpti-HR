@@ -24,17 +24,26 @@ export async function GET(request: NextRequest) {
       // 创建默认admin用户
       const hashedPassword = await hashPassword('admin123');
 
-      adminUser = await userManager.createUser({
-        username: 'admin',
-        email: 'admin@example.com',
-        password: hashedPassword,
-        name: '管理员',
-        role: 'admin',
-        userType: 'main_account',
-        isActive: true,
-      });
-
-      console.log('✅ 创建默认admin用户成功');
+      try {
+        adminUser = await userManager.createUser({
+          username: 'admin',
+          email: 'admin@pulseopti-dev.com',
+          password: hashedPassword,
+          name: '管理员',
+          role: 'admin',
+          userType: 'developer',
+          isSuperAdmin: true,
+          isActive: true,
+        });
+        console.log('✅ 创建默认admin用户成功');
+      } catch (createError: any) {
+        // 如果创建失败（可能是并发导致），再次检查是否已存在
+        adminUser = await userManager.getUserByUsername('admin');
+        if (!adminUser) {
+          throw createError;
+        }
+        console.log('✅ admin用户创建失败但已存在，继续执行');
+      }
     } else {
       console.log('✅ admin用户已存在');
     }
@@ -45,17 +54,26 @@ export async function GET(request: NextRequest) {
     if (!testUser) {
       const hashedPassword = await hashPassword('test123');
 
-      testUser = await userManager.createUser({
-        username: 'test',
-        email: 'test@example.com',
-        password: hashedPassword,
-        name: '测试用户',
-        role: 'user',
-        userType: 'main_account',
-        isActive: true,
-      });
-
-      console.log('✅ 创建默认test用户成功');
+      try {
+        testUser = await userManager.createUser({
+          username: 'test',
+          email: 'test@pulseopti-dev.com',
+          password: hashedPassword,
+          name: '测试用户',
+          role: 'admin',
+          userType: 'developer',
+          isSuperAdmin: true,
+          isActive: true,
+        });
+        console.log('✅ 创建默认test用户成功');
+      } catch (createError: any) {
+        // 如果创建失败（可能是并发导致），再次检查是否已存在
+        testUser = await userManager.getUserByUsername('test');
+        if (!testUser) {
+          throw createError;
+        }
+        console.log('✅ test用户创建失败但已存在，继续执行');
+      }
     } else {
       console.log('✅ test用户已存在');
     }
@@ -67,12 +85,12 @@ export async function GET(request: NextRequest) {
         admin: {
           username: 'admin',
           password: 'admin123',
-          email: 'admin@example.com',
+          email: 'admin@pulseopti-dev.com',
         },
         test: {
           username: 'test',
           password: 'test123',
-          email: 'test@example.com',
+          email: 'test@pulseopti-dev.com',
         },
       }
     });

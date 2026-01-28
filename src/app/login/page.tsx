@@ -114,9 +114,17 @@ export default function LoginPage() {
 
       const data = await response.json();
 
+      if (!data.success) {
+        throw new Error(data.message || '登录失败');
+      }
+
       // 保存用户信息到localStorage
-      localStorage.setItem('user', JSON.stringify(data.data.user));
-      localStorage.setItem('token', data.data.token);
+      if (data.data?.user && data.data?.token) {
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        localStorage.setItem('token', data.data.token);
+      } else {
+        throw new Error('服务器返回数据格式错误');
+      }
 
       // 跳转到仪表盘
       router.push('/dashboard');

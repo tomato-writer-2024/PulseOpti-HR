@@ -63,6 +63,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!agreed) {
+      setError('请同意服务条款和隐私政策');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -84,6 +89,10 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         throw new Error(data.error || data.message || '注册失败');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || '注册失败');
       }
 
       localStorage.setItem('user', JSON.stringify(data.data.user));
