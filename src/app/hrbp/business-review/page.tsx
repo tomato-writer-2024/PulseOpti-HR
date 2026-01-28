@@ -713,7 +713,7 @@ export default function BusinessReviewPage() {
                         {suggestion.category === '激励优化' && <Zap className="h-5 w-5 text-orange-600" />}
                         {suggestion.category}
                       </CardTitle>
-                      <Badge className={getPriorityColor(suggestion.priority)} className="mt-1">
+                      <Badge className={`${getPriorityColor(suggestion.priority)} mt-1`}>
                         {suggestion.priority}优先级
                       </Badge>
                     </div>

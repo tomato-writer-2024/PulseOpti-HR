@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +108,7 @@ export default function SSCSelfServicePage() {
               {/* 步骤指示器 */}
               <div className="flex items-center justify-center mb-8">
                 {[1, 2, 3].map((step) => (
-                  <React.Fragment key={step}>
+                  <Fragment key={step}>
                     <div
                       className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                         currentStep >= step
@@ -129,7 +129,7 @@ export default function SSCSelfServicePage() {
                         }`}
                       />
                     )}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </div>
 

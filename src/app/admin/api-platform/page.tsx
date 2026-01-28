@@ -205,17 +205,22 @@ export default function APIPlatformPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <PageHeader {...createProPageHeader({
-        icon: Globe,
-        title: 'API开放平台',
-        description: '通过API集成PulseOpti HR到您的应用',
-        extraActions: (
+      <PageHeader
+        icon={Globe}
+        title="API开放平台"
+        description="通过API集成PulseOpti HR到您的应用"
+        proBadge={true}
+        breadcrumbs={[
+          { name: '高级功能', href: '/premium' },
+          { name: 'API开放平台', href: '/admin/api-platform' },
+        ]}
+        actions={
           <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
             <Plus className="h-4 w-4 mr-2" />
             创建API密钥
           </Button>
-        )
-      })} />
+        }
+      />
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

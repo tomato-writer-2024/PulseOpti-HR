@@ -262,17 +262,22 @@ export default function CustomReportsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* 页面标题 */}
-        <PageHeader {...createProPageHeader({
-          icon: BarChart3,
-          title: '自定义报表',
-          description: '拖拽式报表设计器，创建专属数据报表',
-          extraActions: (
+        <PageHeader
+          icon={BarChart3}
+          title="自定义报表"
+          description="拖拽式报表设计器，创建专属数据报表"
+          proBadge={true}
+          breadcrumbs={[
+            { name: '报表中心', href: '/dashboard/reports' },
+            { name: '自定义报表', href: '/dashboard/reports/custom' },
+          ]}
+          actions={
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
               导出报表
             </Button>
-          )
-        })} />
+          }
+        />
 
         {/* 统计卡片 */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

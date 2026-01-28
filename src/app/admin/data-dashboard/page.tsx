@@ -767,13 +767,12 @@ export default function DataDashboardPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
 
-    {/* 快捷操作 */}
-    <QuickActions
-      showBackToHome
-      showActions
-      isProPage
-    />
+      <QuickActions
+        showBackToHome
+        showActions
+        isProPage
+      />
+    </div>
   );
 }

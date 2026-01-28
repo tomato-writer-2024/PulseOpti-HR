@@ -33,9 +33,10 @@ import {
   Building2,
   Briefcase,
   Flame,
-  Icecream,
+  IceCream,
   Rocket,
   Download,
+  Lightbulb,
 } from 'lucide-react';
 
 // 九宫格数据
@@ -705,7 +706,7 @@ export default function TalentDiagnosisPage() {
                       </div>
                       <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <div className="text-gray-600 dark:text-gray-400">市场匹配</div>
-                        <div className={`font-bold ${employee.marketMatch < 40 ? 'text-red-600' : ''}`}>
+                        <div className={`font-bold ${Number(employee.marketMatch) < 40 ? 'text-red-600' : ''}`}>
                           {employee.marketMatch}
                         </div>
                       </div>
