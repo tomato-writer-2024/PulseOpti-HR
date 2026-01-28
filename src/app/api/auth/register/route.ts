@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       currency: 'CNY',
       period: 'yearly',
       maxEmployees: 30,
+      maxSubAccounts: 0,
       startDate: new Date(),
       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1年后
       status: 'active',

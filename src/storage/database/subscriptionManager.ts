@@ -1,4 +1,4 @@
-import { eq, and, SQL } from "drizzle-orm";
+import { eq, and, SQL, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { subscriptions, insertSubscriptionSchema } from "./shared/schema";
 import type { Subscription, InsertSubscription } from "./shared/schema";
@@ -7,8 +7,16 @@ export class SubscriptionManager {
   async createSubscription(data: InsertSubscription): Promise<Subscription> {
     const db = await getDb();
     const validated = insertSubscriptionSchema.parse(data);
-    const [subscription] = await db.insert(subscriptions).values(validated).returning();
-    return subscription;
+    // 使用原始SQL来插入，避免Drizzle ORM的问题
+    // 将Date对象转换为ISO字符串
+    const startDateStr = validated.startDate.toISOString();
+    const endDateStr = validated.endDate.toISOString();
+    const result = await db.execute(
+      sql`INSERT INTO subscriptions (company_id, tier, amount, currency, period, max_employees, max_sub_accounts, start_date, end_date, status)
+          VALUES (${validated.companyId}, ${validated.tier}, ${validated.amount}, ${validated.currency}, ${validated.period}, ${validated.maxEmployees}, ${validated.maxSubAccounts}, ${startDateStr}, ${endDateStr}, ${validated.status})
+          RETURNING *`
+    );
+    return result[0] as Subscription;
   }
 
   async getSubscriptions(options: {
