@@ -42,7 +42,7 @@ interface CustomReport {
   chartType: 'bar' | 'line' | 'pie' | 'table';
   dataSources: string[];
   scheduled: boolean;
-  scheduleFrequency?: 'daily' | 'weekly' | 'monthly';
+  scheduleFrequency?: 'daily' | 'weekly' | 'monthly' | 'quarterly';
   recipientCount: number;
 }
 

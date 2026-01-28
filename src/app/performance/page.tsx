@@ -33,6 +33,7 @@ import {
   Star,
   AlertCircle,
   ArrowUpRight,
+  ArrowRight,
   ArrowDownRight,
 } from 'lucide-react';
 
@@ -526,8 +527,8 @@ export default function PerformancePage() {
                   </TableHeader>
                   <TableBody>
                     {filteredRecords.map((record) => {
-                      const gradeConfig = GRADE_CONFIG[record.grade];
-                      const statusConfig = STATUS_CONFIG[record.status];
+                      const gradeConfig = GRADE_CONFIG[record.grade as keyof typeof GRADE_CONFIG];
+                      const statusConfig = STATUS_CONFIG[record.status as keyof typeof STATUS_CONFIG];
                       const GradeIcon = gradeConfig.icon;
 
                       return (
@@ -666,8 +667,8 @@ export default function PerformancePage() {
                 </div>
                 <div>
                   <Label className="text-gray-600 dark:text-gray-400">状态</Label>
-                  <Badge className={STATUS_CONFIG[selectedRecord.status].color}>
-                    {STATUS_CONFIG[selectedRecord.status].label}
+                  <Badge className={STATUS_CONFIG[selectedRecord.status as keyof typeof STATUS_CONFIG].color}>
+                    {STATUS_CONFIG[selectedRecord.status as keyof typeof STATUS_CONFIG].label}
                   </Badge>
                 </div>
               </div>

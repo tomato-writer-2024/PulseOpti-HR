@@ -240,7 +240,9 @@ export default function DataDashboardPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>人均培训时长</CardDescription>
-            <CardTitle className="text-3xl">{(parseInt(trainingHours.value.replace(/,/g, '')) / parseInt(totalEmployees.value)).toFixed(1)}h</CardTitle>
+            <CardTitle className="text-3xl">
+              {`${Math.round((parseInt(trainingHours.value.replace(new RegExp(',', 'g'), '')) / parseInt(String(totalEmployees.value))) * 10) / 10}h`}
+            </CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -270,7 +272,7 @@ export default function DataDashboardPage() {
                       </span>
                     </div>
                   </div>
-                  <Progress value={parseFloat(stage.rate)} className="h-2" />
+                  <Progress value={Number(stage.rate)} className="h-2" />
                 </div>
               ))}
               <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">

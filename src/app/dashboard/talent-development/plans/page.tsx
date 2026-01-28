@@ -258,11 +258,12 @@ export default function DevelopmentPlansPage() {
       completed: { label: '已完成', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
       paused: { label: '已暂停', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
       cancelled: { label: '已取消', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+      pending: { label: '待开始', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
       'not-started': { label: '未开始', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
       'in-progress': { label: '进行中', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
       delayed: { label: '已延期', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
     };
-    const variant = variants[status];
+    const variant = variants[status] || variants['pending'];
     return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 

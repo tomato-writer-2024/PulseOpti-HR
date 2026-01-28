@@ -96,6 +96,7 @@ const GOALS_DATA: Goal[] = [
     category: 'okr',
     status: 'in-progress',
     priority: 'high',
+    progress: 70,
     weight: 25,
     assignee: '技术部',
     department: '技术部',

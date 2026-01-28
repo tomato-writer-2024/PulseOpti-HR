@@ -33,6 +33,7 @@ import {
   Crown,
   Zap,
   BarChart3,
+  CheckCircle,
 } from 'lucide-react';
 
 interface SubscriptionPlan {

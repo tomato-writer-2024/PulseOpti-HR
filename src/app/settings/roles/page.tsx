@@ -16,6 +16,7 @@ import {
   Users,
   Database,
   Globe,
+  Settings,
 } from 'lucide-react';
 
 interface Permission {
@@ -23,6 +24,10 @@ interface Permission {
   name: string;
   description: string;
   category: string;
+}
+
+interface ExtendedPermission extends Permission {
+  hasPermission: boolean;
 }
 
 interface Role {
@@ -194,7 +199,7 @@ export default function RolesPage() {
   const groupedPermissions = useMemo(() => {
     if (!currentRole) return {};
     const rolePermissionIds = new Set(currentRole.permissions);
-    const grouped: Record<string, Permission[]> = {};
+    const grouped: Record<string, ExtendedPermission[]> = {};
 
     PERMISSIONS.forEach(perm => {
       if (!grouped[perm.category]) {

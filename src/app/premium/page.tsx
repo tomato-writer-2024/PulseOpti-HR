@@ -15,6 +15,7 @@ import {
   Star,
   Lock,
   Zap,
+  CheckCircle,
 } from 'lucide-react';
 
 // 模拟数据
