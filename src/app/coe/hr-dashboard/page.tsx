@@ -463,7 +463,7 @@ export default function HRDashboardPage() {
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="destructive">高风险</Badge>
-                        <span className="text-sm">离职风险>80%</span>
+                        <span className="text-sm">离职风险&gt;80%</span>
                       </div>
                       <span className="text-lg font-bold">{hrDashboardData.turnover.highRiskCount}</span>
                     </div>
@@ -487,7 +487,7 @@ export default function HRDashboardPage() {
                         <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
                           低风险
                         </Badge>
-                        <span className="text-sm">离职风险<60%</span>
+                        <span className="text-sm">离职风险&lt;60%</span>
                       </div>
                       <span className="text-lg font-bold">{hrDashboardData.turnover.lowRiskCount}</span>
                     </div>
