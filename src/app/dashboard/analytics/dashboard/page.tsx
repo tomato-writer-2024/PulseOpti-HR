@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -12,31 +13,29 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Users,
-  Briefcase,
-  Clock,
   TrendingUp,
-  TrendingDown,
+  Users,
   DollarSign,
-  GraduationCap,
   Target,
-  Award,
+  Briefcase,
+  GraduationCap,
   Calendar,
-  RefreshCw,
-  Download,
-  Settings,
-  Fullscreen,
-  Crown,
-  BarChart3,
-  PieChart,
-  Activity,
-  Zap,
-  Building,
-  CheckCircle,
-  AlertCircle,
+  Clock,
   ArrowUp,
   ArrowDown,
-  Minus,
+  Award,
+  Zap,
+  Activity,
+  BarChart3,
+  PieChart,
+  Download,
+  RefreshCw,
+  Maximize2,
+  Settings,
+  Filter,
+  AlertCircle,
+  CheckCircle,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,470 +43,491 @@ interface MetricCard {
   title: string;
   value: string | number;
   change: number;
-  changeType: 'increase' | 'decrease' | 'stable';
+  trend: 'up' | 'down';
   icon: any;
-  color: string;
   description: string;
+  color: string;
 }
 
 interface ChartData {
   name: string;
   value: number;
-  color?: string;
+  change?: number;
 }
 
-export default function AnalyticsDashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [timeRange, setTimeRange] = useState('7d');
+export default function DataDashboardPage() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // 模拟实时数据更新
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 30000); // 每30秒更新一次
+
+    return () => clearInterval(interval);
+  }, []);
 
   const metrics: MetricCard[] = [
     {
       title: '员工总数',
-      value: 156,
+      value: 286,
       change: 12,
-      changeType: 'increase',
+      trend: 'up',
       icon: Users,
+      description: '较上月',
       color: 'from-blue-500 to-blue-600',
-      description: '在职员工数量'
     },
     {
       title: '本月入职',
       value: 8,
-      change: 3,
-      changeType: 'increase',
+      change: 20,
+      trend: 'up',
       icon: Briefcase,
+      description: '较上月',
       color: 'from-green-500 to-green-600',
-      description: '本月新入职员工'
-    },
-    {
-      title: '本月离职',
-      value: 3,
-      change: -2,
-      changeType: 'decrease',
-      icon: ArrowDown,
-      color: 'from-red-500 to-red-600',
-      description: '本月离职员工'
     },
     {
       title: '离职率',
-      value: '1.92%',
+      value: '3.2%',
       change: -0.5,
-      changeType: 'decrease',
-      icon: TrendingDown,
-      color: 'from-orange-500 to-orange-600',
-      description: '月度离职率'
+      trend: 'down',
+      icon: Activity,
+      description: '较上月',
+      color: 'from-red-500 to-red-600',
     },
     {
-      title: '平均考勤率',
-      value: '98.5%',
-      change: 0.2,
-      changeType: 'increase',
-      icon: Clock,
-      color: 'from-purple-500 to-purple-600',
-      description: '员工平均出勤率'
-    },
-    {
-      title: '培训覆盖率',
-      value: '85.3%',
-      change: 5.2,
-      changeType: 'increase',
-      icon: GraduationCap,
-      color: 'from-pink-500 to-pink-600',
-      description: '完成培训的员工占比'
-    },
-    {
-      title: '人均产值',
-      value: '¥85,000',
-      change: 8.5,
-      changeType: 'increase',
-      icon: DollarSign,
-      color: 'from-teal-500 to-teal-600',
-      description: '员工月均创造价值'
-    },
-    {
-      title: '人效指数',
-      value: '92.3',
-      change: 3.1,
-      changeType: 'increase',
+      title: '人效比',
+      value: '1.85',
+      change: 8,
+      trend: 'up',
       icon: Target,
-      color: 'from-indigo-500 to-indigo-600',
-      description: '人力资源效能指数'
+      description: '较上月',
+      color: 'from-purple-500 to-purple-600',
+    },
+    {
+      title: '薪酬总额',
+      value: '¥1.25M',
+      change: 15,
+      trend: 'up',
+      icon: DollarSign,
+      description: '较上月',
+      color: 'from-yellow-500 to-orange-600',
+    },
+    {
+      title: '培训完成率',
+      value: '92%',
+      change: 5,
+      trend: 'up',
+      icon: GraduationCap,
+      description: '较上月',
+      color: 'from-pink-500 to-pink-600',
     },
   ];
 
-  const departmentDistribution: ChartData[] = [
-    { name: '技术部', value: 42, color: '#3B82F6' },
-    { name: '销售部', value: 35, color: '#10B981' },
-    { name: '市场部', value: 28, color: '#F59E0B' },
-    { name: '人力资源部', value: 18, color: '#8B5CF6' },
-    { name: '财务部', value: 15, color: '#EF4444' },
-    { name: '运营部', value: 12, color: '#06B6D4' },
-    { name: '其他', value: 6, color: '#6B7280' },
+  const recruitmentData: ChartData[] = [
+    { name: '1月', value: 45 },
+    { name: '2月', value: 52 },
+    { name: '3月', value: 38 },
+    { name: '4月', value: 65 },
+    { name: '5月', value: 72 },
+    { name: '6月', value: 58 },
+    { name: '7月', value: 81 },
+    { name: '8月', value: 94 },
+    { name: '9月', value: 78 },
+    { name: '10月', value: 86 },
+    { name: '11月', value: 102 },
+    { name: '12月', value: 115 },
   ];
 
-  const performanceDistribution: ChartData[] = [
-    { name: 'S级 (卓越)', value: 12, color: '#8B5CF6' },
-    { name: 'A级 (优秀)', value: 35, color: '#3B82F6' },
-    { name: 'B级 (良好)', value: 68, color: '#10B981' },
-    { name: 'C级 (合格)', value: 32, color: '#F59E0B' },
-    { name: 'D级 (待改进)', value: 9, color: '#EF4444' },
+  const performanceData: ChartData[] = [
+    { name: '优秀(S)', value: 45, change: 8 },
+    { name: '良好(A)', value: 128, change: -5 },
+    { name: '合格(B)', value: 85, change: -3 },
+    { name: '需改进(C)', value: 25, change: 0 },
+    { name: '不合格(D)', value: 3, change: 0 },
   ];
 
-  const talentPool: ChartData[] = [
-    { name: '明星员工', value: 15, color: '#8B5CF6' },
-    { name: '业务专家', value: 25, color: '#3B82F6' },
-    { name: '潜力人才', value: 28, color: '#10B981' },
-    { name: '核心贡献者', value: 42, color: '#06B6D4' },
-    { name: '稳定骨干', value: 32, color: '#F59E0B' },
-    { name: '需要改进', value: 14, color: '#EF4444' },
+  const departmentData: ChartData[] = [
+    { name: '产品部', value: 42, change: 5 },
+    { name: '技术部', value: 68, change: 12 },
+    { name: '销售部', value: 55, change: -3 },
+    { name: '市场部', value: 38, change: 8 },
+    { name: '财务部', value: 25, change: 2 },
+    { name: '人力资源部', value: 18, change: 0 },
+    { name: '行政部', value: 22, change: 4 },
+    { name: '运营部', value: 18, change: 6 },
   ];
 
-  const recruitmentProgress = [
-    { stage: '岗位发布', completed: 45, total: 45 },
-    { stage: '简历筛选', completed: 120, total: 200 },
-    { stage: '面试安排', completed: 35, total: 80 },
-    { stage: 'Offer发放', completed: 15, total: 25 },
+  const efficiencyData: ChartData[] = [
+    { name: '周一', value: 92 },
+    { name: '周二', value: 95 },
+    { name: '周三', value: 88 },
+    { name: '周四', value: 91 },
+    { name: '周五', value: 94 },
+    { name: '周六', value: 45 },
+    { name: '周日', value: 12 },
   ];
 
-  useEffect(() => {
-    // 模拟加载动画
-    setTimeout(() => setLoading(false), 1500);
-  }, []);
+  const alerts = [
+    { type: 'warning', message: '销售部本月离职率超过5%，请关注', time: '10分钟前' },
+    { type: 'success', message: '技术部本月绩效目标达成率120%', time: '1小时前' },
+    { type: 'info', message: '新员工入职培训将于下周一开班', time: '2小时前' },
+    { type: 'warning', message: '产品部本月培训完成率仅75%', time: '3小时前' },
+  ];
 
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
-    toast.success('数据已刷新');
-  };
+  const topPerformers = [
+    { name: '张三', department: '产品部', score: 95, avatar: '张' },
+    { name: '李四', department: '销售部', score: 94, avatar: '李' },
+    { name: '王五', department: '技术部', score: 93, avatar: '王' },
+    { name: '赵六', department: '市场部', score: 92, avatar: '赵' },
+    { name: '钱七', department: '运营部', score: 91, avatar: '钱' },
+  ];
 
-  const handleExport = () => {
-    toast.success('数据导出成功');
-  };
-
-  const handleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setFullscreen(false);
-    }
-  };
-
-  const renderChangeIcon = (changeType: string, change: number) => {
-    if (changeType === 'increase') {
-      return <ArrowUp className="h-3 w-3 text-green-600" />;
-    } else if (changeType === 'decrease') {
-      return <ArrowDown className="h-3 w-3 text-red-600" />;
-    } else {
-      return <Minus className="h-3 w-3 text-gray-600" />;
-    }
-  };
-
-  const renderChangeText = (changeType: string, change: number) => {
-    if (changeType === 'increase') {
-      return <span className="text-green-600 text-sm">+{change}%</span>;
-    } else if (changeType === 'decrease') {
-      return <span className="text-red-600 text-sm">{change}%</span>;
-    } else {
-      return <span className="text-gray-600 text-sm">{change}%</span>;
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 text-blue-400" />
-            企业人力资源数据大屏
-          </h1>
-          <p className="text-slate-400 mt-1">实时监控关键人力资源指标</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="24h">24小时</SelectItem>
-              <SelectItem value="7d">近7天</SelectItem>
-              <SelectItem value="30d">近30天</SelectItem>
-              <SelectItem value="90d">近90天</SelectItem>
-              <SelectItem value="1y">近1年</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={loading}
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            刷新
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            导出
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleFullscreen}
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-          >
-            <Fullscreen className="h-4 w-4 mr-2" />
-            全屏
-          </Button>
-        </div>
-      </div>
-
-      {/* 核心指标卡片 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <Card key={index} className="bg-slate-800/50 backdrop-blur border-slate-700 hover:bg-slate-800/70 transition-all">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="text-slate-400 text-sm mb-1">{metric.title}</div>
-                    <div className="text-2xl font-bold text-white mb-2">{metric.value}</div>
-                    <div className="flex items-center gap-2">
-                      {renderChangeIcon(metric.changeType, metric.change)}
-                      {renderChangeText(metric.changeType, metric.change)}
-                      <span className="text-slate-500 text-xs">{metric.description}</span>
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg bg-gradient-to-br ${metric.color}`}>
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* 主图表区域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* 人员结构分析 */}
-        <Card className="bg-slate-800/50 backdrop-blur border-slate-700 lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-blue-400" />
-              人员结构分析
+  const renderMetricCard = (metric: MetricCard) => {
+    const Icon = metric.icon;
+    return (
+      <Card key={metric.title} className="hover:shadow-lg transition-all">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {metric.title}
             </CardTitle>
-            <CardDescription className="text-slate-400">各部门人员分布</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {departmentDistribution.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white text-sm truncate">{item.name}</span>
-                      <span className="text-slate-400 text-xs">{item.value}人</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full transition-all"
-                        style={{
-                          width: `${(item.value / 156) * 100}%`,
-                          backgroundColor: item.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className={`p-2 rounded-lg bg-gradient-to-br ${metric.color}`}>
+              <Icon className="h-4 w-4 text-white" />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 绩效分布 */}
-        <Card className="bg-slate-800/50 backdrop-blur border-slate-700 lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Award className="h-5 w-5 text-green-400" />
-              绩效分布
-            </CardTitle>
-            <CardDescription className="text-slate-400">员工绩效考核结果分布</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {performanceDistribution.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white text-sm truncate">{item.name}</span>
-                      <span className="text-slate-400 text-xs">{item.value}人</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full transition-all"
-                        style={{
-                          width: `${(item.value / 156) * 100}%`,
-                          backgroundColor: item.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-baseline justify-between">
+            <div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                {metric.value}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{metric.description}</div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 人才盘点 */}
-        <Card className="bg-slate-800/50 backdrop-blur border-slate-700 lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-400" />
-              人才盘点
-            </CardTitle>
-            <CardDescription className="text-slate-400">人才九宫格分布</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {talentPool.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white text-sm truncate">{item.name}</span>
-                      <span className="text-slate-400 text-xs">{item.value}人</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full transition-all"
-                        style={{
-                          width: `${(item.value / 156) * 100}%`,
-                          backgroundColor: item.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div
+              className={`flex items-center gap-1 text-sm font-medium ${
+                metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {metric.trend === 'up' ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
+              <span>{Math.abs(metric.change)}%</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 招聘进度和关键趋势 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* 招聘进度 */}
-        <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-orange-400" />
-              招聘进度
-            </CardTitle>
-            <CardDescription className="text-slate-400">当前招聘项目进展情况</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recruitmentProgress.map((item, index) => {
-                const percentage = Math.round((item.completed / item.total) * 100);
-                return (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-sm">{item.stage}</span>
-                      <span className="text-slate-400 text-xs">
-                        {item.completed}/{item.total} ({percentage}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-red-500 transition-all"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 关键趋势 */}
-        <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="h-5 w-5 text-cyan-400" />
-              关键趋势
-            </CardTitle>
-            <CardDescription className="text-slate-400">人力资源关键指标趋势</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { label: '员工增长率', value: 8.3, trend: 'up', color: 'text-green-400' },
-                { label: '人效提升率', value: 12.5, trend: 'up', color: 'text-green-400' },
-                { label: '培训完成率', value: 85.3, trend: 'up', color: 'text-green-400' },
-                { label: '满意度指数', value: 78.6, trend: 'up', color: 'text-green-400' },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {item.trend === 'up' ? (
-                      <TrendingUp className={`h-5 w-5 ${item.color}`} />
-                    ) : (
-                      <TrendingDown className={`h-5 w-5 ${item.color}`} />
-                    )}
-                    <span className="text-white text-sm">{item.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-2xl font-bold ${item.color}`}>{item.value}</span>
-                    <span className="text-slate-400 text-xs">%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 底部提醒 */}
-      <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur border-blue-500/30">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Crown className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white font-semibold mb-1">
-                数据大屏完整功能
-              </h3>
-              <p className="text-slate-400 text-sm">
-                升级企业版可解锁更多数据大屏功能，包括自定义指标配置、历史数据对比、异常告警、多维度分析等
-              </p>
-            </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              立即升级
-            </Button>
           </div>
         </CardContent>
       </Card>
+    );
+  };
+
+  const renderChart = (data: ChartData[], title: string, color: string) => {
+    const maxValue = Math.max(...data.map(d => d.value));
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardDescription>
+            最后更新: {lastUpdated.toLocaleTimeString()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.map((item, index) => (
+              <div key={index}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {item.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {item.value}
+                    </span>
+                    {item.change !== undefined && (
+                      <span
+                        className={`text-xs ${
+                          item.change >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {item.change >= 0 ? '+' : ''}
+                        {item.change}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${color}`}
+                    style={{ width: `${(item.value / maxValue) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderPieChart = (data: ChartData[], title: string) => {
+    const colors = [
+      'from-blue-500 to-blue-600',
+      'from-green-500 to-green-600',
+      'from-yellow-500 to-yellow-600',
+      'from-red-500 to-red-600',
+      'from-purple-500 to-purple-600',
+    ];
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardDescription>分布情况</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-3 h-3 rounded-full bg-gradient-to-br ${colors[index % colors.length]}`}
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {item.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {item.value}人
+                  </span>
+                  {item.change !== undefined && (
+                    <span
+                      className={`text-xs ${
+                        item.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      {item.change >= 0 ? '+' : ''}
+                      {item.change}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div
+      className={`min-h-screen bg-gray-50 dark:bg-gray-950 p-6 transition-all ${
+        isFullscreen ? 'fixed inset-0 z-50 overflow-auto' : ''
+      }`}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* 页面标题 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg">
+                <BarChart3 className="h-7 w-7 text-white" />
+              </div>
+              数据大屏
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              实时数据可视化，关键指标一目了然
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white border-0">
+              <Zap className="h-3 w-3 mr-1" />
+              PRO功能
+            </Badge>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">今日</SelectItem>
+                <SelectItem value="week">本周</SelectItem>
+                <SelectItem value="month">本月</SelectItem>
+                <SelectItem value="quarter">本季度</SelectItem>
+                <SelectItem value="year">本年</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => setIsFullscreen(!isFullscreen)}>
+              <Maximize2 className="h-4 w-4 mr-2" />
+              {isFullscreen ? '退出全屏' : '全屏显示'}
+            </Button>
+            <Button variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              刷新
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              导出
+            </Button>
+          </div>
+        </div>
+
+        {/* 核心指标卡片 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {metrics.map(renderMetricCard)}
+        </div>
+
+        {/* 功能Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              总览
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              绩效
+            </TabsTrigger>
+            <TabsTrigger value="recruitment" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              招聘
+            </TabsTrigger>
+            <TabsTrigger value="efficiency" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              人效
+            </TabsTrigger>
+          </TabsList>
+
+          {/* 总览 */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {renderChart(departmentData, '部门人数分布', 'bg-blue-500')}
+              {renderPieChart(performanceData, '绩效等级分布')}
+              {renderChart(recruitmentData, '年度招聘趋势', 'bg-green-500')}
+            </div>
+
+            {/* 实时预警 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  实时预警
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {alerts.map((alert, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-start gap-3 p-3 rounded-lg ${
+                        alert.type === 'warning'
+                          ? 'bg-yellow-50 dark:bg-yellow-950/30'
+                          : alert.type === 'success'
+                          ? 'bg-green-50 dark:bg-green-950/30'
+                          : 'bg-blue-50 dark:bg-blue-950/30'
+                      }`}
+                    >
+                      {alert.type === 'warning' && (
+                        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      )}
+                      {alert.type === 'success' && (
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      )}
+                      {alert.type === 'info' && (
+                        <Activity className="h-5 w-5 text-blue-600 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {alert.message}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 优秀员工 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-yellow-600" />
+                  优秀员工
+                </CardTitle>
+                <CardDescription>本月绩效排名前5</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-5 gap-4">
+                  {topPerformers.map((employee, index) => (
+                    <Card key={index} className="text-center">
+                      <CardContent className="pt-6">
+                        <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <span className="text-2xl font-bold text-white">
+                            {employee.avatar}
+                          </span>
+                        </div>
+                        <div className="mb-2">
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                            <Star className="h-3 w-3 mr-1" />
+                            第{index + 1}名
+                          </Badge>
+                        </div>
+                        <h3 className="font-medium text-gray-900 dark:text-white">
+                          {employee.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">{employee.department}</p>
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {employee.score}
+                        </div>
+                        <div className="text-xs text-gray-500">绩效评分</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 绩效 */}
+          <TabsContent value="performance" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {renderPieChart(performanceData, '绩效等级分布')}
+              {renderChart(departmentData, '部门绩效对比', 'bg-purple-500')}
+            </div>
+          </TabsContent>
+
+          {/* 招聘 */}
+          <TabsContent value="recruitment" className="space-y-6">
+            {renderChart(recruitmentData, '年度招聘趋势', 'bg-blue-500')}
+          </TabsContent>
+
+          {/* 人效 */}
+          <TabsContent value="efficiency" className="space-y-6">
+            {renderChart(efficiencyData, '工作日人效趋势', 'bg-green-500')}
+          </TabsContent>
+        </Tabs>
+
+        {/* 底部信息 */}
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <div>数据来源: PulseOpti HR 系统</div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              <span>最后更新: {lastUpdated.toLocaleTimeString()}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>自动刷新中</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
