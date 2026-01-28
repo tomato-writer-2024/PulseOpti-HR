@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PageHeader } from '@/components/layout/page-header';
-import { QuickActions, createProPageHeader } from '@/components/layout/quick-actions';
+import { QuickActions } from '@/components/layout/quick-actions';
 import {
   BarChart3,
   Plus,

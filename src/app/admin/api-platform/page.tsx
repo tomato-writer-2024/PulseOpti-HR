@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/layout/page-header';
-import { QuickActions, createProPageHeader } from '@/components/layout/quick-actions';
+import { QuickActions } from '@/components/layout/quick-actions';
 import {
   Code2,
   Copy,
