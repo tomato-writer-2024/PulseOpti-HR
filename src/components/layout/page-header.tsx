@@ -137,10 +137,11 @@ interface ProPageHeaderParams {
   description: string;
   breadcrumbs?: { name: string; href: string }[];
   extraActions?: React.ReactNode;
+  badge?: string | { text: string; color: string };
 }
 
 export function createProPageHeader(params: ProPageHeaderParams) {
-  const { icon, title, description, breadcrumbs, extraActions } = params;
+  const { icon, title, description, breadcrumbs, extraActions, badge } = params;
   return {
     icon,
     title,
@@ -148,6 +149,7 @@ export function createProPageHeader(params: ProPageHeaderParams) {
     breadcrumbs,
     actions: extraActions,
     proBadge: true,
+    badge,
   };
 }
 

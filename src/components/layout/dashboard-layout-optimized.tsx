@@ -55,6 +55,7 @@ import {
   MoreHorizontal,
   Plus,
   AlertCircle,
+  ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '@/lib/theme';
 import { useLocalStorage } from '@/hooks/use-performance';
@@ -614,8 +615,110 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
+  // 搜索状态
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<NavigationItem[]>([]);
+
+  // 搜索功能
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const results = navigation.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.subItems?.some(sub =>
+          sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          sub.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
+  // 键盘快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* 搜索弹窗 */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+          onClick={() => setSearchOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 p-4 border-b">
+              <Search className="h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="搜索功能、页面、操作..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 text-lg focus:outline-none bg-transparent dark:text-white"
+              />
+              <kbd className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded">ESC</kbd>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto p-2">
+              {searchQuery.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p className="font-medium mb-2">快捷搜索</p>
+                  <p className="text-sm">输入关键词快速找到功能</p>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p className="font-medium">未找到相关内容</p>
+                  <p className="text-sm mt-2">尝试其他关键词</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {searchResults.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <ItemIcon className="h-5 w-5 text-purple-600" />
+                        <div className="flex-1">
+                          <p className="font-medium dark:text-white">{item.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
+                        </div>
+                        <ArrowUpRight className="h-4 w-4 text-gray-400" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 移动端遮罩 */}
       {sidebarOpen && (
         <div
@@ -926,32 +1029,24 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索功能、员工、数据..."
-                className="w-full max-w-md rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-900"
-              />
-            </div>
-          </div>
-
           <div className="flex items-center gap-2">
             {/* 搜索框 */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索功能、员工、数据..."
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-900 transition-all"
-              />
-            </div>
+            <Button
+              variant="outline"
+              className="relative w-72 justify-start text-left text-muted-foreground hover:bg-purple-50 hover:border-purple-300 dark:hover:bg-purple-950/30 dark:hover:border-purple-700"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search className="mr-2 h-4 w-4 text-gray-400" />
+              <span className="text-sm">搜索功能、员工、数据...</span>
+              <kbd className="pointer-events-none ml-auto flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+                <span className="text-[10px]">⌘</span>K
+              </kbd>
+            </Button>
             
             {/* 通知 */}
-            <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <Bell className="h-5 w-5" />
-              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             </Button>
             
             {/* 快捷操作 */}
@@ -966,7 +1061,7 @@ export default function DashboardLayoutOptimized({ children }: DashboardLayoutPr
             <Link href="/pricing">
               <Button 
                 size="sm" 
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 gap-2"
+                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 gap-2 transition-all hover:scale-105"
               >
                 <Crown className="h-4 w-4" />
                 升级PRO
