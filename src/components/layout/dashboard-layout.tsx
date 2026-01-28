@@ -335,6 +335,27 @@ const navigation = [
         badge: 'PRO',
       },
       {
+        name: 'API开放平台',
+        href: '/dashboard/settings/api',
+        icon: Zap,
+        description: '完整的REST API接口，支持自定义开发',
+        badge: 'PRO',
+      },
+      {
+        name: '自定义报表',
+        href: '/dashboard/reports/custom',
+        icon: BarChart3,
+        description: '拖拽式报表设计器，创建专属报表',
+        badge: 'PRO',
+      },
+      {
+        name: '数据大屏',
+        href: '/dashboard/analytics/dashboard',
+        icon: TrendingUp,
+        description: '实时数据可视化大屏，关键指标一目了然',
+        badge: 'PRO',
+      },
+      {
         name: '企业协作',
         href: '/dashboard/integration',
         icon: Building,
