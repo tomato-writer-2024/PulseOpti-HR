@@ -175,6 +175,15 @@ const PRIORITY_CONFIG = {
   low: { label: '低', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
 };
 
+// 类型守卫函数
+const isValidPriority = (value: string): value is keyof typeof PRIORITY_CONFIG => {
+  return value in PRIORITY_CONFIG;
+};
+
+const isValidEffort = (value: string): value is keyof typeof EFFORT_CONFIG => {
+  return value in EFFORT_CONFIG;
+};
+
 export default function EfficiencyAnalysisPage() {
   const [timeRange, setTimeRange] = useState('month');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
@@ -290,44 +299,53 @@ export default function EfficiencyAnalysisPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {EFFICIENCY_DATA.opportunities.map((opportunity) => (
-              <div
-                key={opportunity.id}
-                className="border rounded-lg p-4 hover:shadow-md transition-all duration-300"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-white">
-                        {opportunity.title}
-                      </h4>
-                      <Badge className={PRIORITY_CONFIG[opportunity.priority].color}>
-                        {PRIORITY_CONFIG[opportunity.priority].label}优先级
-                      </Badge>
+            {EFFICIENCY_DATA.opportunities.map((opportunity) => {
+              const priorityConfig = isValidPriority(opportunity.priority)
+                ? PRIORITY_CONFIG[opportunity.priority]
+                : PRIORITY_CONFIG.medium;
+              const effortConfig = isValidEffort(opportunity.effort)
+                ? EFFORT_CONFIG[opportunity.effort]
+                : EFFORT_CONFIG.medium;
+
+              return (
+                <div
+                  key={opportunity.id}
+                  className="border rounded-lg p-4 hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          {opportunity.title}
+                        </h4>
+                        <Badge className={priorityConfig.color}>
+                          {priorityConfig.label}优先级
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {opportunity.description}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Badge className={effortConfig.color}>
+                          实施难度: {effortConfig.label}
+                        </Badge>
+                        <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          {opportunity.expectedROI}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {opportunity.description}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <Badge className={EFFORT_CONFIG[opportunity.effort].color}>
-                        实施难度: {EFFORT_CONFIG[opportunity.effort].label}
-                      </Badge>
-                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                        {opportunity.expectedROI}
-                      </span>
+                    <div className="ml-4 flex gap-2">
+                      <Button variant="outline" size="sm">
+                        查看详情
+                      </Button>
+                      <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
+                        立即实施
+                      </Button>
                     </div>
-                  </div>
-                  <div className="ml-4 flex gap-2">
-                    <Button variant="outline" size="sm">
-                      查看详情
-                    </Button>
-                    <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
-                      立即实施
-                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

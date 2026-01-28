@@ -34,8 +34,6 @@ import {
   Sparkles,
   Crown,
   FileCheck,
-  Gavel,
-  FileSignature,
 } from 'lucide-react';
 
 // 劳动合同数据

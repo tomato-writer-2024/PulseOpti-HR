@@ -38,9 +38,9 @@ import {
   Flame,
 } from 'lucide-react';
 
-// 模拟数据
+// 模拟数据 - 基于企业真实用户场景优化
 const dashboardData = {
-  // 关键指标
+  // 关键指标 - 增强人效分析和合规风险
   metrics: {
     totalEmployees: 485,
     newEmployeesThisMonth: 12,
@@ -48,9 +48,16 @@ const dashboardData = {
     pendingApprovals: 8,
     avgAttendance: 96.8,
     trainingCompletion: 87.5,
+    // 新增：人效相关指标
+    efficiencyScore: 92.5,
+    turnoverRate: 8.3,
+    avgRevenuePerEmployee: 850000,
+    // 新增：合规风险
+    complianceRisk: 3,
+    contractsExpiring: 5,
   },
 
-  // 待办事项
+  // 待办事项 - 优化优先级和类型
   tasks: [
     {
       id: '1',
@@ -59,6 +66,8 @@ const dashboardData = {
       priority: 'high',
       deadline: '2025-01-18',
       status: 'pending',
+      department: '技术部',
+      urgent: true,
     },
     {
       id: '2',
@@ -67,6 +76,8 @@ const dashboardData = {
       priority: 'high',
       deadline: '2025-01-20',
       status: 'pending',
+      department: '人力资源部',
+      urgent: true,
     },
     {
       id: '3',
@@ -75,6 +86,8 @@ const dashboardData = {
       priority: 'medium',
       deadline: '2025-01-25',
       status: 'pending',
+      department: '人力资源部',
+      urgent: false,
     },
     {
       id: '4',
@@ -83,36 +96,108 @@ const dashboardData = {
       priority: 'medium',
       deadline: '2025-01-17',
       status: 'pending',
+      department: '技术部',
+      urgent: false,
+    },
+    {
+      id: '5',
+      title: '处理劳动合同到期提醒',
+      type: 'compliance',
+      priority: 'high',
+      deadline: '2025-01-16',
+      status: 'pending',
+      department: '人力资源部',
+      urgent: true,
     },
   ],
 
-  // 最新动态
+  // 最新动态 - 优化内容
   activities: [
     {
       id: '1',
       type: 'hire',
-      message: '新员工王六入职技术部',
+      message: '新员工王六入职技术部，入职完成率100%',
       time: '2小时前',
+      department: '技术部',
     },
     {
       id: '2',
       type: 'training',
-      message: '《领导力发展》培训课程完成率85%',
+      message: '《领导力发展》培训课程完成率85%，预计提升团队效率20%',
       time: '4小时前',
+      department: '培训部',
     },
     {
       id: '3',
       type: 'performance',
-      message: '12月绩效考核数据已生成',
+      message: '12月绩效考核数据已生成，人均绩效评分4.2/5.0',
       time: '昨天',
+      department: '人力资源部',
     },
     {
       id: '4',
       type: 'compliance',
-      message: '3份劳动合同即将到期',
+      message: '3份劳动合同即将到期，系统已自动发送提醒',
       time: '昨天',
+      department: '人力资源部',
+    },
+    {
+      id: '5',
+      type: 'turnover',
+      message: '本月流失预警：销售部有2名员工存在离职风险',
+      time: '2天前',
+      department: '销售部',
     },
   ],
+
+  // 合规风险预警 - 新增
+  complianceRisks: [
+    {
+      id: '1',
+      type: 'contract',
+      severity: 'high',
+      message: '5份劳动合同将在30天内到期',
+      impact: '用工风险',
+      action: '立即处理',
+    },
+    {
+      id: '2',
+      type: 'probation',
+      severity: 'medium',
+      message: '3名员工试用期即将结束',
+      impact: '转正评估',
+      action: '及时评估',
+    },
+    {
+      id: '3',
+      type: 'overtime',
+      severity: 'medium',
+      message: '本月有15人加班时长超过36小时',
+      impact: '合规风险',
+      action: '关注调整',
+    },
+  ],
+
+  // 人效数据 - 新增
+  efficiencyData: {
+    trend: [
+      { month: '8月', value: 85 },
+      { month: '9月', value: 88 },
+      { month: '10月', value: 90 },
+      { month: '11月', value: 91 },
+      { month: '12月', value: 92 },
+      { month: '1月', value: 92.5 },
+    ],
+    topDepartments: [
+      { name: '销售部', score: 95, revenue: 12500000 },
+      { name: '技术部', score: 93, revenue: 8500000 },
+      { name: '产品部', score: 91, revenue: 6200000 },
+    ],
+    warnings: [
+      { department: '市场部', issue: '人均产出下降5%', trend: 'down' },
+      { department: '行政部', issue: '人员利用率低于70%', trend: 'stable' },
+    ],
+  },
 
   // 快捷入口
   shortcuts: [
@@ -215,6 +300,7 @@ const TASK_TYPE_CONFIG = {
   approval: { label: '审批', icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
   task: { label: '任务', icon: FileText, color: 'bg-purple-100 text-purple-600' },
   interview: { label: '面试', icon: Users, color: 'bg-green-100 text-green-600' },
+  compliance: { label: '合规', icon: Shield, color: 'bg-orange-100 text-orange-600' },
 };
 
 const PRIORITY_CONFIG = {
@@ -228,6 +314,13 @@ const ACTIVITY_TYPE_CONFIG = {
   training: { label: '培训', icon: Calendar, color: 'bg-blue-100 text-blue-600' },
   performance: { label: '绩效', icon: Target, color: 'bg-purple-100 text-purple-600' },
   compliance: { label: '合规', icon: AlertCircle, color: 'bg-orange-100 text-orange-600' },
+  turnover: { label: '流失预警', icon: AlertCircle, color: 'bg-red-100 text-red-600' },
+};
+
+const COMPLIANCE_RISK_CONFIG = {
+  high: { label: '高风险', color: 'bg-red-100 text-red-600', icon: AlertCircle },
+  medium: { label: '中风险', color: 'bg-yellow-100 text-yellow-600', icon: AlertCircle },
+  low: { label: '低风险', color: 'bg-green-100 text-green-600', icon: CheckCircle },
 };
 
 export default function DashboardPageOptimized() {
@@ -319,7 +412,7 @@ export default function DashboardPageOptimized() {
         </Alert>
       )}
 
-      {/* 关键指标 */}
+      {/* 关键指标 - 增强版，添加人效和合规指标 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/dashboard/employees'}>
           <CardHeader className="pb-3">
@@ -425,6 +518,198 @@ export default function DashboardPageOptimized() {
         </Card>
       </div>
 
+      {/* 第二行：人效分析和合规预警 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 人效分析 */}
+        <Card className="border-green-200 dark:border-green-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  人效分析
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  企业人力资源效率实时监控
+                </CardDescription>
+              </div>
+              <Badge className="bg-green-100 text-green-600">
+                {dashboardData.metrics.efficiencyScore}分
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* 人效趋势 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">人效趋势</span>
+                  <span className="text-sm text-green-600 flex items-center gap-1">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    +7.5%
+                  </span>
+                </div>
+                <div className="flex items-end gap-1 h-20">
+                  {dashboardData.efficiencyData.trend.map((item, index) => (
+                    <div key={index} className="flex-1 flex flex-col justify-end">
+                      <div
+                        className="bg-gradient-to-t from-green-600 to-green-400 rounded-t-sm transition-all hover:from-green-700 hover:to-green-500"
+                        style={{ height: `${(item.value / 100) * 100}%` }}
+                      />
+                      <span className="text-xs text-center text-gray-600 dark:text-gray-400 mt-1">
+                        {item.month}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 人均产出 */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">人均年产值</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    ¥{(dashboardData.metrics.avgRevenuePerEmployee / 10000).toFixed(0)}万
+                  </span>
+                </div>
+              </div>
+
+              {/* 流失率 */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">员工流失率</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {dashboardData.metrics.turnoverRate}%
+                  </span>
+                </div>
+                <Progress value={dashboardData.metrics.turnoverRate} className="mt-2 h-2" />
+                <div className="flex items-center justify-between mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <span>行业平均：12%</span>
+                  <span className="text-green-600">优于行业</span>
+                </div>
+              </div>
+
+              {/* 优秀部门 */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">优秀部门</span>
+                <div className="mt-2 space-y-2">
+                  {dashboardData.efficiencyData.topDepartments.map((dept, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{dept.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="text-xs">
+                          {dept.score}分
+                        </Badge>
+                        <span className="text-sm text-gray-900 dark:text-white font-medium">
+                          ¥{(dept.revenue / 10000).toFixed(0)}万
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 合规风险预警 */}
+        <Card className="border-orange-200 dark:border-orange-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-orange-600" />
+                  合规风险预警
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  实时监控用工风险，确保合规经营
+                </CardDescription>
+              </div>
+              <Badge className="bg-orange-100 text-orange-600">
+                {dashboardData.metrics.complianceRisk}项
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {dashboardData.complianceRisks.map((risk) => {
+                const config = COMPLIANCE_RISK_CONFIG[risk.severity as keyof typeof COMPLIANCE_RISK_CONFIG];
+                const RiskIcon = config.icon;
+
+                return (
+                  <Card key={risk.id} className={`border-${risk.severity === 'high' ? 'red' : risk.severity === 'medium' ? 'yellow' : 'green'}-200 dark:border-${risk.severity === 'high' ? 'red' : risk.severity === 'medium' ? 'yellow' : 'green'}-800`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center shrink-0`}>
+                          <RiskIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                              {risk.message}
+                            </h4>
+                            <Badge variant="outline" className={config.color}>
+                              {config.label}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              影响：{risk.impact}
+                            </span>
+                            <Button size="sm" variant="outline" className="text-xs h-7">
+                              {risk.action}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {/* 人效警告 */}
+              {dashboardData.efficiencyData.warnings.length > 0 && (
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">人效警告</span>
+                  <div className="mt-2 space-y-2">
+                    {dashboardData.efficiencyData.warnings.map((warning, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-orange-600" />
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            {warning.department}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {warning.issue}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {warning.trend === 'down' ? '下降' : warning.trend === 'up' ? '上升' : '稳定'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Link href="/compliance">
+                  <Button variant="outline" className="w-full">
+                    <Shield className="h-4 w-4 mr-2" />
+                    查看完整合规报告
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左侧 - 待办事项和最新动态 */}
         <div className="lg:col-span-2 space-y-6">
@@ -449,26 +734,35 @@ export default function DashboardPageOptimized() {
                   const TypeIcon = typeConfig.icon;
 
                   return (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <Card key={task.id} className={`hover:shadow-md transition-shadow cursor-pointer ${task.urgent ? 'border-red-200 dark:border-red-800' : ''}`}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <div className={`w-10 h-10 rounded-lg ${typeConfig.color} flex items-center justify-center shrink-0`}>
                             <TypeIcon className="h-5 w-5" />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h4 className="font-medium text-gray-900 dark:text-white">
                                 {task.title}
                               </h4>
+                              {task.urgent && (
+                                <Badge className="bg-red-600 text-white text-xs">紧急</Badge>
+                              )}
                               <Badge variant="outline" className={priorityConfig.color}>
                                 {priorityConfig.label}
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3.5 w-3.5" />
                                 <span>{task.deadline}</span>
                               </div>
+                              {'department' in task && (
+                                <div className="flex items-center gap-1">
+                                  <Briefcase className="h-3.5 w-3.5" />
+                                  <span>{task.department}</span>
+                                </div>
+                              )}
                               <Badge variant="outline" className="text-xs">
                                 {typeConfig.label}
                               </Badge>
@@ -487,7 +781,7 @@ export default function DashboardPageOptimized() {
                 <div className="mt-4 text-center">
                   <Link href="/dashboard/tasks">
                     <Button variant="ghost">
-                      查看全部
+                      查看全部 {dashboardData.tasks.length} 项任务
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </Link>

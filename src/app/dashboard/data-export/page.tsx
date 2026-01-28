@@ -44,6 +44,9 @@ import {
   RotateCw,
   Bell,
   Sparkles,
+  Eye,
+  Settings,
+  AlertCircle,
 } from 'lucide-react';
 
 // 导出统计数据
