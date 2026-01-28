@@ -112,21 +112,39 @@ export default function DashboardOverview() {
   const premiumFeatures: PremiumFeature[] = [
     {
       title: '高级权限管理',
-      description: '企业级权限控制，角色继承和动态权限分配',
+      description: '企业级权限控制，角色继承和动态权限分配，精细化管理',
       icon: Shield,
       href: '/dashboard/permissions/advanced',
     },
     {
       title: '数据导出',
-      description: '支持多种格式导出，自定义字段和日期范围',
+      description: '支持Excel、CSV、PDF多种格式导出，自定义字段和日期范围',
       icon: Download,
       href: '/dashboard/data-export',
     },
     {
       title: '企业协作集成',
-      description: '钉钉、飞书等企业应用无缝对接',
+      description: '钉钉、飞书、企业微信等主流企业应用无缝对接',
       icon: Building,
       href: '/dashboard/integration/dingtalk',
+    },
+    {
+      title: 'API 开放平台',
+      description: '完整的REST API接口，支持自定义开发和二次集成',
+      icon: Zap,
+      href: '/dashboard/settings/api',
+    },
+    {
+      title: '自定义报表',
+      description: '拖拽式报表设计器，创建符合企业需求的专属报表',
+      icon: FileText,
+      href: '/dashboard/reports/custom',
+    },
+    {
+      title: '数据大屏',
+      description: '实时数据可视化大屏，关键指标一目了然',
+      icon: TrendingUp,
+      href: '/dashboard/analytics/dashboard',
     },
   ];
 
@@ -178,18 +196,39 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* 升级提示 */}
-      <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20">
-        <Crown className="h-4 w-4 text-red-600" />
-        <AlertDescription className="flex items-center justify-between">
-          <span>
-            解锁全部高级功能，包括<strong>高级权限管理</strong>、<strong>数据导出</strong>、<strong>企业协作集成</strong>等
-          </span>
-          <Button variant="link" className="h-auto p-0 text-red-600 ml-4" asChild>
-            <Link href="/orders/subscription">立即升级 &rarr;</Link>
-          </Button>
-        </AlertDescription>
-      </Alert>
+      {/* 升级提示 - 更显眼的横幅 */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-600 via-pink-600 to-orange-500 shadow-2xl">
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="relative p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  解锁企业级高级功能
+                </h2>
+                <p className="text-white/90 text-base">
+                  包含<strong className="text-white font-semibold">高级权限管理</strong>、<strong className="text-white font-semibold">数据导出</strong>、<strong className="text-white font-semibold">企业协作集成</strong>、<strong className="text-white font-semibold">API开放平台</strong>等全部功能
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-right">
+                <div className="text-white/70 text-sm">限时优惠</div>
+                <div className="text-white font-bold text-2xl">¥999/月</div>
+              </div>
+              <Button className="bg-white text-red-600 hover:bg-white/90 font-semibold px-6 py-6 shadow-xl" asChild>
+                <Link href="/orders/subscription">
+                  立即升级
+                  <ArrowUpRight className="h-5 w-5 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* 快速统计 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -213,37 +252,52 @@ export default function DashboardOverview() {
       </div>
 
       {/* 商业变现功能入口 */}
-      <Card className="border-2 border-red-200 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20">
+      <Card className="border-2 border-gradient-to-r from-red-500 to-pink-500 bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 dark:from-red-950/30 dark:via-pink-950/30 dark:to-orange-950/30 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-red-600" />
-                企业版高级功能
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <div className="p-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg">
+                  <Crown className="h-5 w-5 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent font-bold">
+                  企业版高级功能
+                </span>
               </CardTitle>
-              <CardDescription className="mt-1">
-                解锁更多功能，提升企业管理效率
+              <CardDescription className="mt-2 text-base">
+                解锁全部高级功能，降本增效，助力业绩增长
               </CardDescription>
             </div>
-            <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white">
-              PRO
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-1.5 text-sm font-semibold shadow-md">
+                PRO 版本
+              </Badge>
+              <Button className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 shadow-md" asChild>
+                <Link href="/orders/subscription">
+                  立即升级
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {premiumFeatures.map((feature, index) => (
               <Link key={index} href={feature.href}>
-                <div className="p-4 rounded-lg border-2 border-red-200 bg-white hover:border-red-400 hover:shadow-lg transition-all cursor-pointer dark:bg-gray-900 dark:border-red-900 dark:hover:border-red-700">
+                <div className="p-5 rounded-xl border-2 border-red-200 bg-white hover:border-red-400 hover:shadow-xl transition-all cursor-pointer dark:bg-gray-900 dark:border-red-900 dark:hover:border-red-700 group">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-                      <feature.icon className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/40 dark:to-pink-900/40 group-hover:scale-110 transition-transform">
+                      <feature.icon className="h-6 w-6 text-red-600 dark:text-red-400" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">{feature.title}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{feature.description}</div>
+                      <div className="font-semibold text-gray-900 dark:text-white text-base">{feature.title}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">{feature.description}</div>
+                      <div className="mt-3 flex items-center text-red-600 dark:text-red-400 text-sm font-medium">
+                        了解更多
+                        <ArrowUpRight className="h-4 w-4 ml-1 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
                   </div>
                 </div>
               </Link>

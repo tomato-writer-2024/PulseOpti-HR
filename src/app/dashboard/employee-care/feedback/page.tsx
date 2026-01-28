@@ -35,6 +35,7 @@ import {
   Eye,
   Reply,
   Send,
+  Edit,
 } from 'lucide-react';
 import { toast } from 'sonner';
 

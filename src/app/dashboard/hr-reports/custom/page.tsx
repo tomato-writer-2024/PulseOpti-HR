@@ -27,6 +27,7 @@ import {
   Plus,
   Filter,
   Clock,
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 

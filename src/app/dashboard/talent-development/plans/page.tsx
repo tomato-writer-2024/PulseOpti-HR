@@ -35,6 +35,7 @@ import {
   Edit,
   Eye,
   Trash2,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 

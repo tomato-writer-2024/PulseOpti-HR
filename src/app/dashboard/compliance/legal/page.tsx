@@ -32,6 +32,8 @@ import {
   Scale,
   TrendingUp,
   Filter,
+  Shield,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
