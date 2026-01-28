@@ -524,7 +524,6 @@ export default function EmployeeCarePage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
 
       {/* 新增关怀弹窗 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1040,6 +1039,7 @@ export default function EmployeeCarePage() {
           </CardContent>
         </Card>
       </TabsContent>
+      </Tabs>
     </div>
   );
 }
