@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   LayoutDashboard,
   Users,
@@ -23,6 +25,16 @@ import {
   Award,
   Zap,
   Plus,
+  Crown,
+  BarChart3,
+  Settings,
+  ChevronRight,
+  Home,
+  Sparkles,
+  Gift,
+  Shield,
+  Download,
+  Flame,
 } from 'lucide-react';
 
 // 模拟数据
@@ -106,38 +118,44 @@ const dashboardData = {
     {
       icon: Users,
       label: '员工管理',
-      href: '/coe/employees',
+      href: '/dashboard/employees',
       color: 'from-blue-500 to-cyan-600',
+      description: '员工档案管理',
     },
     {
       icon: Briefcase,
       label: '招聘管理',
       href: '/recruitment',
       color: 'from-purple-500 to-pink-600',
+      description: '岗位发布面试',
     },
     {
       icon: Target,
       label: '绩效管理',
       href: '/performance',
       color: 'from-green-500 to-teal-600',
+      description: '目标设定评估',
     },
     {
       icon: DollarSign,
       label: '薪酬管理',
       href: '/compensation',
       color: 'from-orange-500 to-red-600',
+      description: '薪资核算发放',
     },
     {
       icon: FileText,
       label: '考勤管理',
       href: '/attendance',
       color: 'from-indigo-500 to-blue-600',
+      description: '打卡排班审批',
     },
     {
       icon: Calendar,
       label: '培训管理',
       href: '/training',
       color: 'from-pink-500 to-rose-600',
+      description: '培训课程记录',
     },
   ],
 
@@ -162,6 +180,34 @@ const dashboardData = {
       { name: '运营部', value: 50 },
     ],
   },
+
+  // PRO功能推广
+  proFeatures: [
+    {
+      title: '数据大屏',
+      description: '实时数据可视化，关键指标一目了然',
+      icon: BarChart3,
+      color: 'from-red-500 to-pink-600',
+      href: '/admin/data-dashboard',
+      badge: 'PRO',
+    },
+    {
+      title: '自定义报表',
+      description: '拖拽式报表设计，创建专属数据分析',
+      icon: FileText,
+      color: 'from-orange-500 to-red-600',
+      href: '/admin/custom-reports',
+      badge: 'PRO',
+    },
+    {
+      title: 'AI智能招聘',
+      description: 'AI面试、简历解析、智能匹配',
+      icon: Sparkles,
+      color: 'from-purple-500 to-pink-600',
+      href: '/recruitment/ai-interview',
+      badge: 'AI',
+    },
+  ],
 };
 
 const TASK_TYPE_CONFIG = {
@@ -183,18 +229,39 @@ const ACTIVITY_TYPE_CONFIG = {
   compliance: { label: '合规', icon: AlertCircle, color: 'bg-orange-100 text-orange-600' },
 };
 
-export default function DashboardPage() {
+export default function DashboardPageOptimized() {
   const [showAllTasks, setShowAllTasks] = useState(false);
+  const [showProBanner, setShowProBanner] = useState(true);
 
   // 显示的待办事项
   const displayTasks = showAllTasks ? dashboardData.tasks : dashboardData.tasks.slice(0, 3);
+
+  // 3秒后自动隐藏PRO推广横幅
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowProBanner(false);
+    }, 30000); // 30秒后隐藏
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              <span>首页</span>
+              <ChevronRight className="h-4 w-4" />
+              <span className="font-medium text-gray-900 dark:text-white">工作台</span>
+            </Link>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
             工作台
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -207,16 +274,45 @@ export default function DashboardPage() {
             消息通知
             <Badge className="ml-2 bg-red-600">5</Badge>
           </Button>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-            <Plus className="h-4 w-4 mr-2" />
-            快速创建
-          </Button>
+          <Link href="/dashboard/quick-actions">
+            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+              <Plus className="h-4 w-4 mr-2" />
+              快速创建
+            </Button>
+          </Link>
         </div>
       </div>
 
+      {/* PRO功能推广横幅 */}
+      {showProBanner && (
+        <Alert className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30 border-red-200 dark:border-red-800">
+          <Crown className="h-4 w-4 text-red-600" />
+          <AlertTitle className="flex items-center gap-2">
+            <span>升级PRO，解锁企业级功能</span>
+            <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white">限时优惠</Badge>
+          </AlertTitle>
+          <AlertDescription className="mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">立即升级，享受数据大屏、自定义报表、AI智能招聘等高级功能，提升管理效率50%+</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => setShowProBanner(false)}>
+                  关闭
+                </Button>
+                <Link href="/premium">
+                  <Button size="sm" className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700">
+                    立即升级
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* 关键指标 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/dashboard/employees'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>员工总数</CardDescription>
@@ -234,7 +330,7 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/recruitment'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>招聘中</CardDescription>
@@ -250,7 +346,7 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/dashboard/tasks'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>待审批</CardDescription>
@@ -266,7 +362,7 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/attendance'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>出勤率</CardDescription>
@@ -283,7 +379,7 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/training'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>培训完成率</CardDescription>
@@ -299,19 +395,22 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer border-red-200 dark:border-red-800" onClick={() => window.location.href = '/admin/data-dashboard'}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardDescription>人效指数</CardDescription>
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-white">
-                <Zap className="h-5 w-5" />
+              <CardDescription>数据大屏</CardDescription>
+              <div className="flex items-center gap-1">
+                <Crown className="h-4 w-4 text-red-600" />
+                <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs">PRO</Badge>
               </div>
             </div>
-            <CardTitle className="text-3xl">95.8</CardTitle>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <Zap className="h-6 w-6 text-red-600" />
+              实时
+            </CardTitle>
             <div className="flex items-center gap-2 text-sm">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-green-600">↑ 5.2%</span>
-              <span className="text-gray-600 dark:text-gray-400">较上月</span>
+              <Flame className="h-3.5 w-3.5 text-red-600" />
+              <span className="text-red-600 font-medium">30秒自动刷新</span>
             </div>
           </CardHeader>
         </Card>
@@ -341,7 +440,7 @@ export default function DashboardPage() {
                   const TypeIcon = typeConfig.icon;
 
                   return (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
+                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <div className={`w-10 h-10 rounded-lg ${typeConfig.color} flex items-center justify-center shrink-0`}>
@@ -377,12 +476,64 @@ export default function DashboardPage() {
               </div>
               {dashboardData.tasks.length > 3 && (
                 <div className="mt-4 text-center">
-                  <Button variant="ghost" onClick={() => setShowAllTasks(!showAllTasks)}>
-                    {showAllTasks ? '收起' : '查看全部'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  <Link href="/dashboard/tasks">
+                    <Button variant="ghost">
+                      查看全部
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* PRO功能推荐 */}
+          <Card className="border-red-200 dark:border-red-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-red-600" />
+                    PRO功能推荐
+                  </CardTitle>
+                  <CardDescription>提升企业人效，助力业绩倍增</CardDescription>
+                </div>
+                <Badge className="bg-gradient-to-r from-red-600 to-pink-600 text-white">热门</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {dashboardData.proFeatures.map((feature) => {
+                  const FeatureIcon = feature.icon;
+
+                  return (
+                    <Link key={feature.title} href={feature.href}>
+                      <Card className="hover:shadow-lg transition-all hover:border-red-400 dark:hover:border-red-600 cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center text-white`}>
+                              <FeatureIcon className="h-5 w-5" />
+                            </div>
+                            <Badge variant="outline" className={feature.badge === 'PRO' ? 'bg-red-100 text-red-600 border-red-300' : 'bg-purple-100 text-purple-600 border-purple-300'}>
+                              {feature.badge}
+                            </Badge>
+                          </div>
+                          <h4 className="font-medium text-gray-900 dark:text-white mb-1">{feature.title}</h4>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{feature.description}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="mt-4 text-center">
+                <Link href="/premium">
+                  <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30">
+                    查看全部PRO功能
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
@@ -433,14 +584,15 @@ export default function DashboardPage() {
                   const Icon = shortcut.icon;
 
                   return (
-                    <Button
-                      key={shortcut.label}
-                      variant="outline"
-                      className={`h-auto flex-col py-6 gap-2 bg-gradient-to-br ${shortcut.color} text-white border-0 hover:opacity-90`}
-                    >
-                      <Icon className="h-6 w-6" />
-                      <span className="text-sm font-medium">{shortcut.label}</span>
-                    </Button>
+                    <Link key={shortcut.label} href={shortcut.href}>
+                      <Button
+                        variant="outline"
+                        className={`h-auto flex-col py-6 gap-2 bg-gradient-to-br ${shortcut.color} text-white border-0 hover:opacity-90 w-full`}
+                      >
+                        <Icon className="h-6 w-6" />
+                        <span className="text-sm font-medium">{shortcut.label}</span>
+                      </Button>
+                    </Link>
                   );
                 })}
               </div>
@@ -486,6 +638,24 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* 快速返回首页 */}
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800">
+            <CardContent className="p-4">
+              <Link href="/dashboard" className="block">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white">
+                    <Home className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 dark:text-white">返回首页</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">快速回到工作台</div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                </div>
+              </Link>
             </CardContent>
           </Card>
         </div>
