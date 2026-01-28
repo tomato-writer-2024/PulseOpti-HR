@@ -140,6 +140,7 @@ const DASHBOARD_DATA = {
 
 export default function DataDashboardPage() {
   const { metrics, recruitment, performance, attendance, departments, salaryDistribution, trainingCompletion, efficiency } = DASHBOARD_DATA;
+  const { trainingHours, totalEmployees } = metrics;
 
   // 计算招聘漏斗转化率
   const recruitmentFunnel = useMemo(() => {
@@ -468,6 +469,3 @@ export default function DataDashboardPage() {
     </div>
   );
 }
-
-// 修正：使用 DASHBOARD_DATA 中的 metrics.totalEmployees
-const { metrics, trainingHours, totalEmployees } = DASHBOARD_DATA;
