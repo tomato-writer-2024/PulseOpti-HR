@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { UserGuide, shouldShowGuide } from '@/components/layout/user-guide';
+import { UserGuide, useShouldShowGuide } from '@/components/layout/user-guide';
 import {
   LayoutDashboard,
   Users,
@@ -326,7 +326,8 @@ const COMPLIANCE_RISK_CONFIG = {
 export default function DashboardPageOptimized() {
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [showProBanner, setShowProBanner] = useState(true);
-  const [showGuide, setShowGuide] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
+  const showGuide = useShouldShowGuide();
 
   // 显示的待办事项
   const displayTasks = showAllTasks ? dashboardData.tasks : dashboardData.tasks.slice(0, 3);
@@ -340,11 +341,9 @@ export default function DashboardPageOptimized() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 检查是否需要显示引导
+  // 设置当前日期（客户端）
   useEffect(() => {
-    if (shouldShowGuide()) {
-      setShowGuide(true);
-    }
+    setCurrentDate(new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
   }, []);
 
   return (
@@ -367,7 +366,7 @@ export default function DashboardPageOptimized() {
             工作台
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            欢迎回来，张经理！今天是{new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            欢迎回来，张经理！今天是{currentDate}
           </p>
         </div>
         <div className="flex gap-2">

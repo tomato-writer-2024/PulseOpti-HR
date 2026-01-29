@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       name: validated.name,
       password: hashedPassword,
       role: 'owner',
+      userType: 'main_account', // 明确设置为主账号
       isSuperAdmin: false,
     };
     const user = await userManager.createUser(userData);
@@ -124,7 +125,9 @@ export async function POST(request: NextRequest) {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          userType: user.userType || 'main_account',
           isSuperAdmin: user.isSuperAdmin,
+          companyId: company.id,
         },
         companyId: company.id,
         token,

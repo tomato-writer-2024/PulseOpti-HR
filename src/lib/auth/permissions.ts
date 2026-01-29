@@ -1,475 +1,400 @@
-import { permissionManager } from '@/storage/database/permissionManager';
-import { NextResponse } from 'next/server';
-import type { JWTPayload } from './jwt';
-import { UserType } from '@/lib/services/accountManagementService';
-
 /**
- * 角色定义
+ * 权限管理系统
+ * 实现多租户、多层级权限控制
  */
-export const ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  OWNER: 'owner',
-  HR_ADMIN: 'hr_admin',
-  HR_SPECIALIST: 'hr_specialist',
-  EMPLOYEE: 'employee',
-} as const;
 
-/**
- * 账号类型定义
- */
-export const USER_TYPES = {
-  MAIN_ACCOUNT: 'main_account', // 主账号
-  SUB_ACCOUNT: 'sub_account',   // 子账号
-  EMPLOYEE: 'employee',         // 员工号
-  DEVELOPER: 'developer',       // 开发者账号
-} as const;
+import { cookies } from 'next/headers';
 
-/**
- * 权限代码定义
- */
+// ==================== 权限定义 ====================
+
+export enum Role {
+  SUPER_ADMIN = 'super_admin',     // 超级管理员（系统级）
+  ADMIN = 'admin',                 // 管理员（企业级）
+  MANAGER = 'manager',             // 经理（部门级）
+  EMPLOYEE = 'employee',           // 员工（个人级）
+}
+
+export enum UserType {
+  MAIN_ACCOUNT = 'main_account',   // 主账号（企业负责人）
+  SUB_ACCOUNT = 'sub_account',     // 子账号（企业管理员）
+  EMPLOYEE = 'employee',           // 普通员工账号
+  DEVELOPER = 'developer',         // 开发运维账号（系统级）
+}
+
+export enum Permission {
+  // 企业管理权限
+  MANAGE_COMPANY = 'manage_company',
+  MANAGE_SUBSCRIPTION = 'manage_subscription',
+  MANAGE_SETTINGS = 'manage_settings',
+
+  // 用户管理权限
+  MANAGE_USERS = 'manage_users',
+  MANAGE_SUB_ACCOUNTS = 'manage_sub_accounts',
+  MANAGE_EMPLOYEES = 'manage_employees',
+
+  // 组织架构权限
+  MANAGE_DEPARTMENTS = 'manage_departments',
+  MANAGE_POSITIONS = 'manage_positions',
+
+  // 人事管理权限
+  MANAGE_RECRUITMENT = 'manage_recruitment',
+  MANAGE_TRAINING = 'manage_training',
+  MANAGE_PERFORMANCE = 'manage_performance',
+  MANAGE_ATTENDANCE = 'manage_attendance',
+  MANAGE_SALARY = 'manage_salary',
+
+  // 查看权限
+  VIEW_ALL_DATA = 'view_all_data',
+  VIEW_DEPARTMENT_DATA = 'view_department_data',
+  VIEW_SELF_DATA = 'view_self_data',
+
+  // 系统管理权限
+  SYSTEM_ADMIN = 'system_admin',
+  SYSTEM_MONITORING = 'system_monitoring',
+
+  // 账号管理
+  ACCOUNT_CREATE_SUB_ACCOUNT = 'account.create_sub_account',
+  ACCOUNT_VIEW_QUOTA = 'account.view_quota',
+
+  // 工作流
+  WORKFLOW_MANAGE = 'workflow.manage',
+
+  // 其他兼容性权限（从旧的权限系统迁移）
+  EMPLOYEE_EDIT = 'employee.edit',
+  EMPLOYEE_READ = 'employee.read',
+  RECRUITMENT_EDIT = 'recruitment.edit',
+  RECRUITMENT_APPROVE = 'recruitment.approve',
+  PAYROLL_MANAGE = 'payroll.manage',
+  CONTRACT_MANAGE = 'contract.manage',
+  OVERTIME_APPROVE = 'overtime.approve',
+  RESIGNATION_MANAGE = 'resignation.manage',
+  TRAINING_MANAGE = 'training.manage',
+  CANDIDATE_CREATE = 'candidate.create',
+  INTERVIEW_SCHEDULE = 'interview.schedule',
+  JOB_CREATE = 'job.create',
+  OFFER_CREATE = 'offer.create',
+  OFFER_MANAGE = 'offer.manage',
+  SCHEDULE_MANAGE = 'schedule.manage',
+}
+
+// ==================== PERMISSIONS 对象导出（用于向后兼容） ====================
+
 export const PERMISSIONS = {
+  // 企业管理
+  MANAGE_COMPANY: Permission.MANAGE_COMPANY,
+  MANAGE_SUBSCRIPTION: Permission.MANAGE_SUBSCRIPTION,
+  MANAGE_SETTINGS: Permission.MANAGE_SETTINGS,
+
   // 用户管理
-  USER_VIEW: 'user.view',
-  USER_CREATE: 'user.create',
-  USER_EDIT: 'user.edit',
-  USER_DELETE: 'user.delete',
+  MANAGE_USERS: Permission.MANAGE_USERS,
+  MANAGE_SUB_ACCOUNTS: Permission.MANAGE_SUB_ACCOUNTS,
+  MANAGE_EMPLOYEES: Permission.MANAGE_EMPLOYEES,
 
-  // 账号管理（主账号专用）
-  ACCOUNT_CREATE_SUB_ACCOUNT: 'account.create_sub_account',
-  ACCOUNT_CREATE_EMPLOYEE: 'account.create_employee',
-  ACCOUNT_DELETE_SUB_ACCOUNT: 'account.delete_sub_account',
-  ACCOUNT_DELETE_EMPLOYEE: 'account.delete_employee',
-  ACCOUNT_VIEW_QUOTA: 'account.view_quota',
+  // 组织架构
+  MANAGE_DEPARTMENTS: Permission.MANAGE_DEPARTMENTS,
+  MANAGE_POSITIONS: Permission.MANAGE_POSITIONS,
 
-  // 员工管理
-  EMPLOYEE_VIEW: 'employee.view',
-  EMPLOYEE_CREATE: 'employee.create',
-  EMPLOYEE_EDIT: 'employee.edit',
-  EMPLOYEE_DELETE: 'employee.delete',
-  EMPLOYEE_VIEW_SELF: 'employee.view_self',
+  // 人事管理
+  MANAGE_RECRUITMENT: Permission.MANAGE_RECRUITMENT,
+  MANAGE_TRAINING: Permission.MANAGE_TRAINING,
+  MANAGE_PERFORMANCE: Permission.MANAGE_PERFORMANCE,
+  MANAGE_ATTENDANCE: Permission.MANAGE_ATTENDANCE,
+  MANAGE_SALARY: Permission.MANAGE_SALARY,
 
-  // 部门管理
-  DEPARTMENT_VIEW: 'department.view',
-  DEPARTMENT_CREATE: 'department.create',
-  DEPARTMENT_EDIT: 'department.edit',
-  DEPARTMENT_DELETE: 'department.delete',
+  // 查看权限
+  VIEW_ALL_DATA: Permission.VIEW_ALL_DATA,
+  VIEW_DEPARTMENT_DATA: Permission.VIEW_DEPARTMENT_DATA,
+  VIEW_SELF_DATA: Permission.VIEW_SELF_DATA,
 
-  // 职位管理
-  POSITION_VIEW: 'position.view',
-  POSITION_CREATE: 'position.create',
-  POSITION_EDIT: 'position.edit',
-  POSITION_DELETE: 'position.delete',
+  // 系统管理
+  SYSTEM_ADMIN: Permission.SYSTEM_ADMIN,
+  SYSTEM_MONITORING: Permission.SYSTEM_MONITORING,
 
-  // 招聘管理
-  RECRUITMENT_VIEW: 'recruitment.view',
-  RECRUITMENT_CREATE: 'recruitment.create',
-  RECRUITMENT_EDIT: 'recruitment.edit',
-  RECRUITMENT_DELETE: 'recruitment.delete',
-  RECRUITMENT_APPROVE: 'recruitment.approve',
-  JOB_CREATE: 'job.create',
-  CANDIDATE_CREATE: 'candidate.create',
-  INTERVIEW_SCHEDULE: 'interview.schedule',
-  OFFER_CREATE: 'offer.create',
-  OFFER_MANAGE: 'offer.manage',
+  // 账号管理
+  ACCOUNT_CREATE_SUB_ACCOUNT: Permission.ACCOUNT_CREATE_SUB_ACCOUNT,
+  ACCOUNT_VIEW_QUOTA: Permission.ACCOUNT_VIEW_QUOTA,
 
-  // 绩效管理
-  PERFORMANCE_VIEW: 'performance.view',
-  PERFORMANCE_CREATE: 'performance.create',
-  PERFORMANCE_EDIT: 'performance.edit',
-  PERFORMANCE_DELETE: 'performance.delete',
-  PERFORMANCE_REVIEW: 'performance.review',
-  PERFORMANCE_APPROVE: 'performance.approve',
-  PERFORMANCE_MANAGE: 'performance.manage',
+  // 工作流
+  WORKFLOW_MANAGE: Permission.WORKFLOW_MANAGE,
 
-  // 培训管理
-  TRAINING_MANAGE: 'training.manage',
+  // 其他兼容性权限
+  EMPLOYEE_EDIT: Permission.EMPLOYEE_EDIT,
+  EMPLOYEE_READ: Permission.EMPLOYEE_READ,
+  RECRUITMENT_EDIT: Permission.RECRUITMENT_EDIT,
+  RECRUITMENT_APPROVE: Permission.RECRUITMENT_APPROVE,
+  PAYROLL_MANAGE: Permission.PAYROLL_MANAGE,
+  CONTRACT_MANAGE: Permission.CONTRACT_MANAGE,
+  OVERTIME_APPROVE: Permission.OVERTIME_APPROVE,
+  RESIGNATION_MANAGE: Permission.RESIGNATION_MANAGE,
+  TRAINING_MANAGE: Permission.TRAINING_MANAGE,
+  CANDIDATE_CREATE: Permission.CANDIDATE_CREATE,
+  INTERVIEW_SCHEDULE: Permission.INTERVIEW_SCHEDULE,
+  JOB_CREATE: Permission.JOB_CREATE,
+  OFFER_CREATE: Permission.OFFER_CREATE,
+  OFFER_MANAGE: Permission.OFFER_MANAGE,
+  SCHEDULE_MANAGE: Permission.SCHEDULE_MANAGE,
+};
 
-  // 离职管理
-  RESIGNATION_MANAGE: 'resignation.manage',
+// ==================== USER_TYPES 对象导出（用于向后兼容） ====================
 
-  // 合规管理
-  CONTRACT_MANAGE: 'contract.manage',
+export const USER_TYPES = {
+  MAIN_ACCOUNT: UserType.MAIN_ACCOUNT,
+  SUB_ACCOUNT: UserType.SUB_ACCOUNT,
+  EMPLOYEE: UserType.EMPLOYEE,
+  DEVELOPER: UserType.DEVELOPER,
+};
 
-  // 订阅管理
-  SUBSCRIPTION_VIEW: 'subscription.view',
-  SUBSCRIPTION_MANAGE: 'subscription.manage',
+// ==================== 角色权限映射 ====================
 
-  // 考勤管理
-  ATTENDANCE_VIEW: 'attendance.view',
-  LEAVE_MANAGE: 'leave.manage',
-  LEAVE_APPROVE: 'leave.approve',
-  OVERTIME_MANAGE: 'overtime.manage',
-  OVERTIME_APPROVE: 'overtime.approve',
-  SCHEDULE_MANAGE: 'schedule.manage',
-
-  // 薪酬管理
-  COMPENSATION_VIEW: 'compensation.view',
-  PAYROLL_MANAGE: 'payroll.manage',
-
-  // 报表查看
-  REPORT_VIEW: 'report.view',
-  REPORT_EXPORT: 'report.export',
-
-  // 系统设置
-  SETTINGS_VIEW: 'settings.view',
-  SETTINGS_EDIT: 'settings.edit',
-
-  // 工作流管理
-  WORKFLOW_VIEW: 'workflow.view',
-  WORKFLOW_MANAGE: 'workflow.manage',
-  WORKFLOW_APPROVE: 'workflow.approve',
-
-  // 实时连接
-  CONNECTION_SEND_MESSAGE: 'connection.send_message',
-  CONNECTION_ASSIGN_TASK: 'connection.assign_task',
-  CONNECTION_SYNC_STATUS: 'connection.sync_status',
-
-  // 运维监控（开发者专用）
-  DEVELOPER_VIEW_ORDERS: 'developer.view_orders',
-  DEVELOPER_MANAGE_ORDERS: 'developer.manage_orders',
-  DEVELOPER_EXECUTE_MAINTENANCE: 'developer.execute_maintenance',
-  DEVELOPER_VIEW_LOGS: 'developer.view_logs',
-  DEVELOPER_PROCESS_REFUND: 'developer.process_refund',
-} as const;
-
-/**
- * 账号类型权限映射
- */
-export const USER_TYPE_PERMISSIONS: Record<string, string[]> = {
-  [USER_TYPES.MAIN_ACCOUNT]: [
-    // 企业设置
-    PERMISSIONS.SETTINGS_VIEW,
-    PERMISSIONS.SETTINGS_EDIT,
-    PERMISSIONS.SUBSCRIPTION_VIEW,
-    PERMISSIONS.SUBSCRIPTION_MANAGE,
-
-    // 账号管理
-    PERMISSIONS.ACCOUNT_CREATE_SUB_ACCOUNT,
-    PERMISSIONS.ACCOUNT_CREATE_EMPLOYEE,
-    PERMISSIONS.ACCOUNT_DELETE_SUB_ACCOUNT,
-    PERMISSIONS.ACCOUNT_DELETE_EMPLOYEE,
-    PERMISSIONS.ACCOUNT_VIEW_QUOTA,
-
-    // 员工管理
-    PERMISSIONS.EMPLOYEE_VIEW,
-    PERMISSIONS.EMPLOYEE_CREATE,
-    PERMISSIONS.EMPLOYEE_EDIT,
-    PERMISSIONS.EMPLOYEE_DELETE,
-
-    // 部门管理
-    PERMISSIONS.DEPARTMENT_VIEW,
-    PERMISSIONS.DEPARTMENT_CREATE,
-    PERMISSIONS.DEPARTMENT_EDIT,
-    PERMISSIONS.DEPARTMENT_DELETE,
-
-    // 职位管理
-    PERMISSIONS.POSITION_VIEW,
-    PERMISSIONS.POSITION_CREATE,
-    PERMISSIONS.POSITION_EDIT,
-    PERMISSIONS.POSITION_DELETE,
-
-    // 招聘管理
-    PERMISSIONS.RECRUITMENT_VIEW,
-    PERMISSIONS.RECRUITMENT_CREATE,
-    PERMISSIONS.RECRUITMENT_EDIT,
-    PERMISSIONS.RECRUITMENT_DELETE,
-    PERMISSIONS.RECRUITMENT_APPROVE,
-
-    // 绩效管理
-    PERMISSIONS.PERFORMANCE_VIEW,
-    PERMISSIONS.PERFORMANCE_CREATE,
-    PERMISSIONS.PERFORMANCE_EDIT,
-    PERMISSIONS.PERFORMANCE_REVIEW,
-    PERMISSIONS.PERFORMANCE_APPROVE,
-
-    // 考勤管理
-    PERMISSIONS.ATTENDANCE_VIEW,
-    PERMISSIONS.LEAVE_MANAGE,
-    PERMISSIONS.LEAVE_APPROVE,
-    PERMISSIONS.OVERTIME_MANAGE,
-    PERMISSIONS.OVERTIME_APPROVE,
-
-    // 薪酬管理
-    PERMISSIONS.COMPENSATION_VIEW,
-    PERMISSIONS.PAYROLL_MANAGE,
-
-    // 报表查看
-    PERMISSIONS.REPORT_VIEW,
-    PERMISSIONS.REPORT_EXPORT,
-
-    // 工作流管理
-    PERMISSIONS.WORKFLOW_VIEW,
-    PERMISSIONS.WORKFLOW_MANAGE,
-    PERMISSIONS.WORKFLOW_APPROVE,
-
-    // 实时连接
-    PERMISSIONS.CONNECTION_SEND_MESSAGE,
-    PERMISSIONS.CONNECTION_ASSIGN_TASK,
-    PERMISSIONS.CONNECTION_SYNC_STATUS,
+const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  [Role.SUPER_ADMIN]: Object.values(Permission), // 超级管理员拥有所有权限
+  [Role.ADMIN]: [
+    // 企业管理
+    Permission.MANAGE_COMPANY,
+    Permission.MANAGE_SUBSCRIPTION,
+    Permission.MANAGE_SETTINGS,
+    // 用户管理
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_SUB_ACCOUNTS,
+    Permission.MANAGE_EMPLOYEES,
+    // 组织架构
+    Permission.MANAGE_DEPARTMENTS,
+    Permission.MANAGE_POSITIONS,
+    // 人事管理
+    Permission.MANAGE_RECRUITMENT,
+    Permission.MANAGE_TRAINING,
+    Permission.MANAGE_PERFORMANCE,
+    Permission.MANAGE_ATTENDANCE,
+    Permission.MANAGE_SALARY,
+    // 查看权限
+    Permission.VIEW_ALL_DATA,
   ],
-
-  [USER_TYPES.SUB_ACCOUNT]: [
-    // 员工管理（仅部门）
-    PERMISSIONS.EMPLOYEE_VIEW,
-    PERMISSIONS.EMPLOYEE_CREATE,
-    PERMISSIONS.EMPLOYEE_EDIT,
-
-    // 部门管理（仅部门）
-    PERMISSIONS.DEPARTMENT_VIEW,
-    PERMISSIONS.DEPARTMENT_CREATE,
-    PERMISSIONS.DEPARTMENT_EDIT,
-
-    // 职位管理
-    PERMISSIONS.POSITION_VIEW,
-    PERMISSIONS.POSITION_CREATE,
-    PERMISSIONS.POSITION_EDIT,
-
-    // 招聘管理
-    PERMISSIONS.RECRUITMENT_VIEW,
-    PERMISSIONS.RECRUITMENT_CREATE,
-    PERMISSIONS.RECRUITMENT_EDIT,
-    PERMISSIONS.RECRUITMENT_APPROVE,
-    PERMISSIONS.JOB_CREATE,
-    PERMISSIONS.CANDIDATE_CREATE,
-    PERMISSIONS.INTERVIEW_SCHEDULE,
-    PERMISSIONS.OFFER_CREATE,
-    PERMISSIONS.OFFER_MANAGE,
-
-    // 绩效管理
-    PERMISSIONS.PERFORMANCE_VIEW,
-    PERMISSIONS.PERFORMANCE_CREATE,
-    PERMISSIONS.PERFORMANCE_EDIT,
-    PERMISSIONS.PERFORMANCE_REVIEW,
-    PERMISSIONS.PERFORMANCE_MANAGE,
-
-    // 考勤管理
-    PERMISSIONS.ATTENDANCE_VIEW,
-    PERMISSIONS.LEAVE_MANAGE,
-    PERMISSIONS.LEAVE_APPROVE,
-    PERMISSIONS.OVERTIME_MANAGE,
-    PERMISSIONS.OVERTIME_APPROVE,
-
-    // 报表查看
-    PERMISSIONS.REPORT_VIEW,
-    PERMISSIONS.REPORT_EXPORT,
-
-    // 工作流管理
-    PERMISSIONS.WORKFLOW_VIEW,
-    PERMISSIONS.WORKFLOW_MANAGE,
-
-    // 实时连接
-    PERMISSIONS.CONNECTION_SEND_MESSAGE,
-    PERMISSIONS.CONNECTION_ASSIGN_TASK,
-    PERMISSIONS.CONNECTION_SYNC_STATUS,
+  [Role.MANAGER]: [
+    // 组织架构
+    Permission.MANAGE_DEPARTMENTS,
+    // 人事管理
+    Permission.MANAGE_RECRUITMENT,
+    Permission.MANAGE_TRAINING,
+    Permission.MANAGE_PERFORMANCE,
+    Permission.MANAGE_ATTENDANCE,
+    // 查看权限
+    Permission.VIEW_DEPARTMENT_DATA,
   ],
-
-  [USER_TYPES.EMPLOYEE]: [
-    // 查看自己的信息
-    PERMISSIONS.EMPLOYEE_VIEW_SELF,
-    PERMISSIONS.REPORT_VIEW,
-    PERMISSIONS.CONNECTION_SEND_MESSAGE,
-  ],
-
-  [USER_TYPES.DEVELOPER]: [
-    // 运维监控权限
-    PERMISSIONS.DEVELOPER_VIEW_ORDERS,
-    PERMISSIONS.DEVELOPER_MANAGE_ORDERS,
-    PERMISSIONS.DEVELOPER_EXECUTE_MAINTENANCE,
-    PERMISSIONS.DEVELOPER_VIEW_LOGS,
-    PERMISSIONS.DEVELOPER_PROCESS_REFUND,
+  [Role.EMPLOYEE]: [
+    // 查看权限
+    Permission.VIEW_SELF_DATA,
   ],
 };
 
-/**
- * 角色权限映射（默认权限配置，用于向后兼容）
- */
-export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS), // 超级管理员拥有所有权限
-  [ROLES.OWNER]: USER_TYPE_PERMISSIONS[USER_TYPES.MAIN_ACCOUNT],
-  [ROLES.HR_ADMIN]: USER_TYPE_PERMISSIONS[USER_TYPES.SUB_ACCOUNT],
-  [ROLES.HR_SPECIALIST]: [
-    PERMISSIONS.USER_VIEW,
-    PERMISSIONS.EMPLOYEE_VIEW,
-    PERMISSIONS.DEPARTMENT_VIEW,
-    PERMISSIONS.POSITION_VIEW,
-    PERMISSIONS.RECRUITMENT_VIEW,
-    PERMISSIONS.RECRUITMENT_EDIT,
-    PERMISSIONS.PERFORMANCE_VIEW,
-    PERMISSIONS.PERFORMANCE_EDIT,
-    PERMISSIONS.REPORT_VIEW,
+// ==================== 用户类型权限映射 ====================
+
+const USER_TYPE_PERMISSIONS: Record<UserType, Permission[]> = {
+  [UserType.MAIN_ACCOUNT]: [
+    Permission.MANAGE_COMPANY,
+    Permission.MANAGE_SUBSCRIPTION,
+    Permission.MANAGE_SETTINGS,
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_SUB_ACCOUNTS,
+    Permission.MANAGE_EMPLOYEES,
   ],
-  [ROLES.EMPLOYEE]: USER_TYPE_PERMISSIONS[USER_TYPES.EMPLOYEE],
+  [UserType.SUB_ACCOUNT]: [
+    Permission.MANAGE_USERS,
+    Permission.MANAGE_EMPLOYEES,
+  ],
+  [UserType.EMPLOYEE]: [
+    Permission.VIEW_SELF_DATA,
+  ],
+  [UserType.DEVELOPER]: [
+    Permission.SYSTEM_ADMIN,
+    Permission.SYSTEM_MONITORING,
+    Permission.MANAGE_COMPANY,
+  ],
 };
 
+// ==================== 用户信息接口 ====================
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: Role;
+  userType: UserType;
+  isSuperAdmin: boolean;
+  companyId?: string;
+  parentUserId?: string;
+  permissions: Permission[];
+  metadata?: any;
+}
+
+// ==================== 权限验证函数 ====================
+
 /**
- * 数据访问边界定义
+ * 检查用户是否有指定权限
  */
-export interface DataAccessBoundary {
-  canAccessAllCompanyData: boolean;    // 是否可访问公司所有数据
-  canAccessDepartmentData: boolean;   // 是否可访问部门数据
-  canAccessOwnDataOnly: boolean;      // 是否只能访问自己的数据
-  canAccessSystemData: boolean;       // 是否可访问系统级数据（运维）
-  allowedDepartments?: string[];      // 允许访问的部门ID列表
+export function hasPermission(user: AuthUser, permission: Permission): boolean {
+  return user.permissions.includes(permission);
 }
 
 /**
- * 根据账号类型获取数据访问边界
+ * 检查用户是否有任意一个权限
  */
-export function getDataAccessBoundary(userType: string, role: string): DataAccessBoundary {
-  switch (userType) {
-    case USER_TYPES.MAIN_ACCOUNT:
-      return {
-        canAccessAllCompanyData: true,
-        canAccessDepartmentData: true,
-        canAccessOwnDataOnly: false,
-        canAccessSystemData: false,
-      };
+export function hasAnyPermission(user: AuthUser, permissions: Permission[]): boolean {
+  return permissions.some(p => user.permissions.includes(p));
+}
 
-    case USER_TYPES.SUB_ACCOUNT:
-      return {
-        canAccessAllCompanyData: false,
-        canAccessDepartmentData: true,
-        canAccessOwnDataOnly: false,
-        canAccessSystemData: false,
-      };
+/**
+ * 检查用户是否有所有权限
+ */
+export function hasAllPermissions(user: AuthUser, permissions: Permission[]): boolean {
+  return permissions.every(p => user.permissions.includes(p));
+}
 
-    case USER_TYPES.EMPLOYEE:
-      return {
-        canAccessAllCompanyData: false,
-        canAccessDepartmentData: false,
-        canAccessOwnDataOnly: true,
-        canAccessSystemData: false,
-      };
+/**
+ * 检查用户是否可以访问指定公司的数据
+ */
+export function canAccessCompany(user: AuthUser, companyId: string): boolean {
+  // 超级管理员可以访问所有公司
+  if (user.isSuperAdmin) {
+    return true;
+  }
 
-    case USER_TYPES.DEVELOPER:
-      return {
-        canAccessAllCompanyData: false,
-        canAccessDepartmentData: false,
-        canAccessOwnDataOnly: false,
-        canAccessSystemData: true,
-      };
+  // 开发运维账号可以访问所有公司（用于调试）
+  if (user.userType === UserType.DEVELOPER) {
+    return true;
+  }
 
+  // 其他用户只能访问自己的公司
+  return user.companyId === companyId;
+}
+
+/**
+ * 获取用户的数据访问范围
+ */
+export function getDataAccessScope(user: AuthUser): 'all' | 'company' | 'department' | 'self' {
+  if (user.isSuperAdmin || user.userType === UserType.DEVELOPER) {
+    return 'all';
+  }
+
+  if (user.role === Role.ADMIN || user.userType === UserType.MAIN_ACCOUNT) {
+    return 'company';
+  }
+
+  if (user.role === Role.MANAGER) {
+    return 'department';
+  }
+
+  return 'self';
+}
+
+// ==================== 从请求中获取用户信息 ====================
+
+/**
+ * 从 Cookie 中解析 JWT token 并返回用户信息
+ */
+export function getAuthUserFromRequest(): AuthUser | null {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    // 简单解析 JWT（实际应该使用 jwt-verify）
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    // 构建用户权限
+    const role = payload.role as Role;
+    const userType = payload.userType as UserType;
+
+    const rolePermissions = ROLE_PERMISSIONS[role] || [];
+    const userTypePermissions = USER_TYPE_PERMISSIONS[userType] || [];
+
+    const permissions = [...new Set([...rolePermissions, ...userTypePermissions])];
+
+    return {
+      id: payload.userId,
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      role,
+      userType,
+      isSuperAdmin: payload.isSuperAdmin || false,
+      companyId: payload.companyId,
+      parentUserId: payload.parentUserId,
+      permissions,
+      metadata: payload.metadata,
+    };
+  } catch (error) {
+    console.error('[Auth] 解析 token 失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 验证用户是否已登录
+ */
+export function requireAuth(): AuthUser {
+  const user = getAuthUserFromRequest();
+
+  if (!user) {
+    throw new Error('Unauthorized: 用户未登录');
+  }
+
+  return user;
+}
+
+/**
+ * 验证用户是否有指定权限
+ */
+export function requirePermission(permission: Permission): AuthUser {
+  const user = requireAuth();
+
+  if (!hasPermission(user, permission)) {
+    throw new Error('Forbidden: 权限不足');
+  }
+
+  return user;
+}
+
+/**
+ * 验证用户是否可以访问指定公司
+ */
+export function requireCompanyAccess(companyId: string): AuthUser {
+  const user = requireAuth();
+
+  if (!canAccessCompany(user, companyId)) {
+    throw new Error('Forbidden: 无权访问该企业数据');
+  }
+
+  return user;
+}
+
+// ==================== API 辅助函数 ====================
+
+/**
+ * 获取数据查询条件（基于用户权限）
+ */
+export function getDataQueryCondition(user: AuthUser, companyColumn: string = 'company_id') {
+  const scope = getDataAccessScope(user);
+
+  switch (scope) {
+    case 'all':
+      return {}; // 超级管理员可以查询所有数据
+    case 'company':
+      return { [companyColumn]: user.companyId };
+    case 'department':
+      return {
+        [companyColumn]: user.companyId,
+        // TODO: 添加部门过滤逻辑
+      };
+    case 'self':
+      return {
+        [companyColumn]: user.companyId,
+        userId: user.id,
+      };
     default:
-      throw new Error(`未知的账号类型: ${userType}`);
+      return {};
   }
-}
-
-/**
- * 检查用户是否具有指定权限（基于账号类型和角色）
- */
-export async function hasPermission(user: JWTPayload, permissionCode: string): Promise<boolean> {
-  // 超级管理员拥有所有权限
-  if (user.isSuperAdmin || user.role === ROLES.SUPER_ADMIN) {
-    return true;
-  }
-
-  // 开发者账号只检查运维相关权限
-  if (user.userType === USER_TYPES.DEVELOPER) {
-    const developerPermissions = USER_TYPE_PERMISSIONS[USER_TYPES.DEVELOPER];
-    return developerPermissions.includes(permissionCode);
-  }
-
-  // 企业账号检查账号类型权限
-  if (user.userType && USER_TYPE_PERMISSIONS[user.userType]) {
-    const typePermissions = USER_TYPE_PERMISSIONS[user.userType];
-    return typePermissions.includes(permissionCode);
-  }
-
-  // 角色权限（向后兼容）
-  if (user.role && ROLE_PERMISSIONS[user.role]) {
-    const rolePermissions = ROLE_PERMISSIONS[user.role];
-    return rolePermissions.includes(permissionCode);
-  }
-
-  // 从数据库查询权限
-  return await permissionManager.hasPermission(user.role, permissionCode);
-}
-
-/**
- * 检查用户是否具有任意一个权限
- */
-export async function hasAnyPermission(user: JWTPayload, permissionCodes: string[]): Promise<boolean> {
-  for (const code of permissionCodes) {
-    if (await hasPermission(user, code)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * 检查用户是否具有所有权限
- */
-export async function hasAllPermissions(user: JWTPayload, permissionCodes: string[]): Promise<boolean> {
-  for (const code of permissionCodes) {
-    if (!(await hasPermission(user, code))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * 检查用户是否可以访问指定数据
- * @param user 用户信息
- * @param resourceCompanyId 资源所属企业ID
- * @param resourceOwnerId 资源所有者ID（可选）
- * @param resourceDepartmentId 资源所属部门ID（可选）
- */
-export function canAccessData(
-  user: JWTPayload,
-  resourceCompanyId: string,
-  resourceOwnerId?: string,
-  resourceDepartmentId?: string
-): boolean {
-  // 开发者账号不能访问企业数据
-  if (user.userType === USER_TYPES.DEVELOPER) {
-    return false;
-  }
-
-  // 主账号可以访问公司内所有数据
-  if (user.userType === USER_TYPES.MAIN_ACCOUNT) {
-    return user.companyId === resourceCompanyId;
-  }
-
-  // 员工号只能访问自己的数据
-  if (user.userType === USER_TYPES.EMPLOYEE) {
-    return user.companyId === resourceCompanyId && user.userId === resourceOwnerId;
-  }
-
-  // 子账号可以访问部门内数据
-  if (user.userType === USER_TYPES.SUB_ACCOUNT) {
-    if (user.companyId !== resourceCompanyId) {
-      return false;
-    }
-    // 如果资源属于该账号，可以访问
-    if (resourceOwnerId === user.userId) {
-      return true;
-    }
-    // 如果资源属于该账号管理的部门，可以访问
-    // 这里需要根据实际情况实现部门关系判断
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * 未授权响应
- */
-export function unauthorized(message: string = '未授权，请先登录'): NextResponse {
-  return NextResponse.json(
-    { success: false, error: message },
-    { status: 401 }
-  );
-}
-
-/**
- * 权限不足响应
- */
-export function permissionDenied(message: string = '权限不足'): NextResponse {
-  return NextResponse.json(
-    { success: false, error: message },
-    { status: 403 }
-  );
 }

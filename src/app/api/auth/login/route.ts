@@ -95,6 +95,9 @@ export async function POST(request: NextRequest) {
       userType: user.userType || 'main_account',
       isSuperAdmin: user.isSuperAdmin,
       name: user.name,
+      email: user.email,
+      phone: user.phone,
+      parentUserId: user.parentUserId,
     });
 
     // 记录登录日志（不阻塞响应）
@@ -120,7 +123,10 @@ export async function POST(request: NextRequest) {
           phone: user.phone,
           avatarUrl: user.avatarUrl,
           role: user.role,
+          userType: user.userType || 'main_account',
           isSuperAdmin: user.isSuperAdmin,
+          companyId: user.companyId,
+          parentUserId: user.parentUserId,
         },
         companyId: user.companyId,
         token,

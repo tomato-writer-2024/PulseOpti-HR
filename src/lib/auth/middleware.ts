@@ -1,99 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken, type JWTPayload } from './jwt';
-import { hasPermission, unauthorized, permissionDenied } from './permissions';
+import { hasPermission, Permission, AuthUser } from './permissions';
 
 /**
  * 从请求中获取用户信息
  */
-export async function getUserFromRequest(request: NextRequest): Promise<JWTPayload | null> {
-  const authHeader = request.headers.get('authorization');
-  const token = extractTokenFromHeader(authHeader);
+export async function getUserFromRequest(request: NextRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader);
 
-  if (!token) {
+    if (!token) {
+      return null;
+    }
+
+    const payload = await verifyToken(token);
+    
+    // 构建用户权限
+    const user: AuthUser = {
+      id: payload.userId,
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      role: payload.role,
+      userType: payload.userType,
+      isSuperAdmin: payload.isSuperAdmin || false,
+      companyId: payload.companyId,
+      parentUserId: payload.parentUserId,
+      permissions: [], // TODO: 根据角色计算权限
+      metadata: payload.metadata,
+    };
+
+    return user;
+  } catch (error) {
+    console.error('[Auth] 解析 token 失败:', error);
     return null;
   }
-
-  return verifyToken(token);
 }
 
 /**
  * 要求用户已认证
  */
-export async function requireAuth(request: NextRequest): Promise<NextResponse | JWTPayload> {
+export async function requireAuth(request: NextRequest): Promise<NextResponse | AuthUser> {
   const user = await getUserFromRequest(request);
 
   if (!user) {
-    return unauthorized();
+    return NextResponse.json({ error: 'Unauthorized: 用户未登录' }, { status: 401 });
   }
 
   return user;
+}
+
+/**
+ * 要求用户具有指定权限（单个）
+ */
+export async function requirePermission(
+  request: NextRequest,
+  permission: Permission | string
+): Promise<NextResponse | AuthUser> {
+  return requireAnyPermission(request, [permission as Permission]);
 }
 
 /**
  * 要求用户具有指定权限
  */
-export async function requirePermission(
-  request: NextRequest,
-  permissionCode: string
-): Promise<NextResponse | JWTPayload> {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return unauthorized();
-  }
-
-  const hasPerm = await hasPermission(user, permissionCode);
-
-  if (!hasPerm) {
-    return permissionDenied();
-  }
-
-  return user;
-}
-
-/**
- * 要求用户具有任意一个权限
- */
 export async function requireAnyPermission(
   request: NextRequest,
-  permissionCodes: string[]
-): Promise<NextResponse | JWTPayload> {
+  permissions: Permission[]
+): Promise<NextResponse | AuthUser> {
   const user = await getUserFromRequest(request);
 
   if (!user) {
-    return unauthorized();
+    return NextResponse.json({ error: 'Unauthorized: 用户未登录' }, { status: 401 });
   }
 
-  const hasPerm = await Promise.any(
-    permissionCodes.map(code => hasPermission(user, code))
-  );
+  const hasPerm = permissions.some(p => hasPermission(user, p));
 
   if (!hasPerm) {
-    return permissionDenied();
-  }
-
-  return user;
-}
-
-/**
- * 要求用户具有所有权限
- */
-export async function requireAllPermissions(
-  request: NextRequest,
-  permissionCodes: string[]
-): Promise<NextResponse | JWTPayload> {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return unauthorized();
-  }
-
-  const hasPerm = await Promise.all(
-    permissionCodes.map(code => hasPermission(user, code))
-  ).then(results => results.every(r => r));
-
-  if (!hasPerm) {
-    return permissionDenied();
+    return NextResponse.json({ error: 'Forbidden: 权限不足' }, { status: 403 });
   }
 
   return user;
@@ -113,11 +97,11 @@ export async function requireSuperAdmin(request: NextRequest): Promise<NextRespo
   const user = await getUserFromRequest(request);
 
   if (!user) {
-    return unauthorized();
+    return NextResponse.json({ error: 'Unauthorized: 用户未登录' }, { status: 401 });
   }
 
   if (!isSuperAdmin(user)) {
-    return permissionDenied();
+    return NextResponse.json({ error: 'Forbidden: 需要超级管理员权限' }, { status: 403 });
   }
 
   return user;
