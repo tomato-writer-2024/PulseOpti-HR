@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -235,17 +235,37 @@ const UserGuideComponent = ({
 
 export const UserGuide = memo(UserGuideComponent);
 
-// 检查是否需要显示引导
+// 检查是否需要显示引导 - 使用 Hook 以避免 SSR 问题
+export function useShouldShowGuide(): boolean {
+  const [shouldShow, setShouldShow] = useState(false);
+
+  useEffect(() => {
+    const completed = localStorage.getItem('pulseopti-guide-completed');
+    const skipped = localStorage.getItem('pulseopti-guide-skipped');
+    setShouldShow(!completed && !skipped);
+  }, []);
+
+  return shouldShow;
+}
+
+// 重置引导状态 - 使用 Hook 以避免 SSR 问题
+export function useResetGuide(): () => void {
+  const reset = useCallback(() => {
+    localStorage.removeItem('pulseopti-guide-completed');
+    localStorage.removeItem('pulseopti-guide-skipped');
+  }, []);
+
+  return reset;
+}
+
+// 向后兼容的导出（仅供内部使用，不推荐在组件外直接调用）
 export function shouldShowGuide(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
   const completed = localStorage.getItem('pulseopti-guide-completed');
   const skipped = localStorage.getItem('pulseopti-guide-skipped');
   return !completed && !skipped;
-}
-
-// 重置引导状态
-export function resetGuide(): void {
-  localStorage.removeItem('pulseopti-guide-completed');
-  localStorage.removeItem('pulseopti-guide-skipped');
 }
 
 // 悬浮提示按钮组件

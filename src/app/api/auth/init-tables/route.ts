@@ -37,7 +37,8 @@ export async function POST() {
       CREATE INDEX verification_codes_expires_at_idx ON verification_codes(expires_at);
     `);
 
-    // 3. 添加 user_id 字段到 subscriptions 表（如果不存在）
+    // 3. 添加缺失字段到 subscriptions 表
+    // user_id
     await db.execute(sql`
       DO $$
       BEGIN
@@ -45,7 +46,84 @@ export async function POST() {
           SELECT 1 FROM information_schema.columns
           WHERE table_name='subscriptions' AND column_name='user_id'
         ) THEN
-          ALTER TABLE subscriptions ADD COLUMN user_id BIGINT;
+          ALTER TABLE subscriptions ADD COLUMN user_id VARCHAR(36);
+        END IF;
+      END $$;
+    `);
+
+    // is_trial
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='is_trial'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN is_trial BOOLEAN DEFAULT false;
+        END IF;
+      END $$;
+    `);
+
+    // trial_ends_at
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='trial_ends_at'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN trial_ends_at TIMESTAMP WITH TIME ZONE;
+        END IF;
+      END $$;
+    `);
+
+    // trial_days_remaining
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='trial_days_remaining'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN trial_days_remaining INTEGER DEFAULT 0;
+        END IF;
+      END $$;
+    `);
+
+    // has_trial_used
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='has_trial_used'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN has_trial_used BOOLEAN DEFAULT false;
+        END IF;
+      END $$;
+    `);
+
+    // auto_renew
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='auto_renew'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN auto_renew BOOLEAN DEFAULT false;
+        END IF;
+      END $$;
+    `);
+
+    // 添加索引
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_indexes
+          WHERE tablename='subscriptions' AND indexname='idx_subscriptions_user_id'
+        ) THEN
           CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
         END IF;
       END $$;
