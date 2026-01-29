@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
-import { verifyAuth } from '@/lib/auth/middleware';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
   try {
     // 验证用户身份
-    const auth = await verifyAuth(request);
+    const auth = await requireAuth(request);
     if (auth instanceof NextResponse) {
       return auth;
     }
