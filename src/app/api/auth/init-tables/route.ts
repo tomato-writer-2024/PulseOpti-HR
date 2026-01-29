@@ -116,6 +116,19 @@ export async function POST() {
       END $$;
     `);
 
+    // metadata
+    await db.execute(sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='subscriptions' AND column_name='metadata'
+        ) THEN
+          ALTER TABLE subscriptions ADD COLUMN metadata JSONB;
+        END IF;
+      END $$;
+    `);
+
     // 添加索引
     await db.execute(sql`
       DO $$
