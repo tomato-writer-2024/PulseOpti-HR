@@ -26,18 +26,18 @@ function getSystemTheme(): boolean {
 }
 
 /**
- * 主题Store
+ * 主题Store - 使用 SSR 安全的持久化配置
  */
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       mode: 'light',
       isDark: false,
-      
+
       setTheme: (mode) => {
         const isDark = mode === 'auto' ? getSystemTheme() : mode === 'dark';
         set({ mode, isDark });
-        
+
         // 应用主题到DOM
         if (typeof document !== 'undefined') {
           const html = document.documentElement;
@@ -50,12 +50,12 @@ export const useThemeStore = create<ThemeState>()(
           }
         }
       },
-      
+
       toggleTheme: () => {
         set((state) => {
           const newMode = state.isDark ? 'light' : 'dark';
           const newIsDark = !state.isDark;
-          
+
           // 应用主题到DOM
           if (typeof document !== 'undefined') {
             const html = document.documentElement;
@@ -67,29 +67,45 @@ export const useThemeStore = create<ThemeState>()(
               html.classList.remove('dark');
             }
           }
-          
+
           return { mode: newMode, isDark: newIsDark };
         });
       },
     }),
     {
       name: 'theme-storage',
-      onRehydrateStorage: () => (state) => {
-        // 恢复时应用主题
-        if (state) {
-          const isDark = state.mode === 'auto' ? getSystemTheme() : state.mode === 'dark';
-          state.isDark = isDark;
-          
-          if (typeof document !== 'undefined') {
-            const html = document.documentElement;
-            if (isDark) {
-              html.classList.add('dark');
-            } else {
-              html.classList.remove('dark');
-            }
+      storage: {
+        getItem: (name) => {
+          // 只在客户端读取
+          if (typeof window === 'undefined') return null;
+          try {
+            const str = localStorage.getItem(name);
+            return str ? JSON.parse(str) : null;
+          } catch {
+            return null;
           }
-        }
+        },
+        setItem: (name, value) => {
+          // 只在客户端写入
+          if (typeof window === 'undefined') return;
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch (error) {
+            console.warn('Failed to save theme to localStorage:', error);
+          }
+        },
+        removeItem: (name) => {
+          // 只在客户端删除
+          if (typeof window === 'undefined') return;
+          try {
+            localStorage.removeItem(name);
+          } catch (error) {
+            console.warn('Failed to remove theme from localStorage:', error);
+          }
+        },
       },
+      // 禁用 SSR 时的水合
+      skipHydration: true,
     }
   )
 );
