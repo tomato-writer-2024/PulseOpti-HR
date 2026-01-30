@@ -27,10 +27,6 @@ import {
   Diamond
 } from 'lucide-react';
 
-// 强制使用静态生成，避免每次请求都重新渲染
-export const dynamic = 'force-static';
-export const revalidate = 3600; // 每小时重新验证一次
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
