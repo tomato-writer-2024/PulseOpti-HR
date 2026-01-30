@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export interface User {
   id: string;
@@ -17,63 +17,63 @@ export interface User {
 
 export function useAuth() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const getUser = (): User | null => {
+  // 确保客户端已挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 从 localStorage 读取用户信息和 token
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('user');
-      return userStr ? JSON.parse(userStr) : null;
+      try {
+        const userStr = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        setUser(userStr ? JSON.parse(userStr) : null);
+        setToken(token);
+      } catch (error) {
+        console.error('Failed to read from localStorage:', error);
+      }
     }
-    return null;
-  };
+  }, []);
 
-  const getToken = (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('token');
-    }
-    return null;
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
     }
+    setUser(null);
+    setToken(null);
     router.push('/login');
-  };
+  }, [router]);
 
-  const isAuthenticated = (): boolean => {
-    return getUser() !== null && getToken() !== null;
-  };
+  const isAuthenticated = mounted && user !== null && token !== null;
 
-  const hasPermission = (permission: string): boolean => {
-    const user = getUser();
+  const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false;
-
-    // 超级管理员拥有所有权限
     if (user.role === 'super_admin') return true;
-
-    // 检查用户是否有指定权限
     return user.permissions?.includes(permission) || false;
-  };
+  }, [user]);
 
-  const hasRole = (roles: string | string[]): boolean => {
-    const user = getUser();
+  const hasRole = useCallback((roles: string | string[]): boolean => {
     if (!user) return false;
-
     if (Array.isArray(roles)) {
       return roles.includes(user.role);
     }
-
     return user.role === roles;
-  };
+  }, [user]);
 
   return {
-    user: getUser(),
-    token: getToken(),
+    user,
+    token,
     isAuthenticated,
     logout,
     hasPermission,
     hasRole,
+    mounted,
   };
 }
 

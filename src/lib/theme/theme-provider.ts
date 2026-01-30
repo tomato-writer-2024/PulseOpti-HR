@@ -136,6 +136,9 @@ export function initThemeListener() {
  * 初始化主题
  */
 export function initTheme() {
+  // 只在客户端执行
+  if (typeof window === 'undefined') return;
+
   // 从本地存储恢复主题
   const stored = localStorage.getItem('theme-storage');
   if (stored) {

@@ -28,7 +28,17 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    // 检查本地存储中的用户信息和 token
+    // 只在客户端检查本地存储中的用户信息和 token
+    if (typeof window === 'undefined') {
+      setState({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        loading: false,
+      });
+      return;
+    }
+
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
 
